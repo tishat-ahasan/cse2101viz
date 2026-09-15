@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE2101 Data Structures — Visualizations</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%230f6e56%27/%3E%3Crect x=%2718%27 y=%2740%27 width=%2764%27 height=%2720%27 rx=%274%27 fill=%27%23afa9ec%27 opacity=%270.5%27/%3E%3Crect x=%2750%27 y=%2740%27 width=%2732%27 height=%2720%27 rx=%274%27 fill=%27%23e24b4a%27 opacity=%270.35%27/%3E%3Cline x1=%2750%27 y1=%2730%27 x2=%2750%27 y2=%2770%27 stroke=%27%231d9e75%27 stroke-width=%276%27/%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%277%27 fill=%27%231d9e75%27/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#faf9f5; --card:#ffffff; --ink:#2c2c2a; --muted:#5f5e5a; --faint:#888780;
+    --line:#d3d1c7; --line2:#b4b2a9;
+    --accent:#0f6e56; --accent-l:#1d9e75; --purple:#534ab7; --lo:#185fa5; --hi:#993c1d;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6; padding:40px 24px;}
+  .wrap{max-width:860px; margin:0 auto;}
+
+  header{text-align:center; margin-bottom:40px;}
+  .course-tag{display:inline-block; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--accent); background:#e3f4ee; padding:5px 14px; border-radius:20px; margin-bottom:16px;}
+  h1{font-size:34px; font-weight:600; margin:0 0 6px; line-height:1.25;}
+  .course-sub{font-size:17px; color:var(--muted); margin:0;}
+
+  .prof{display:flex; align-items:center; gap:16px; justify-content:center; margin-top:26px;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 22px;
+    max-width:520px; margin-left:auto; margin-right:auto;}
+  .avatar{width:52px; height:52px; border-radius:50%; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:600; flex-shrink:0;}
+  .prof .info{text-align:left;}
+  .prof .name{font-size:17px; font-weight:600; margin:0;}
+  .prof .desig{font-size:14px; color:var(--muted); margin:0;}
+
+  .section-label{font-size:14px; text-transform:uppercase; letter-spacing:.05em; color:var(--faint);
+    margin:44px 0 16px; text-align:center;}
+
+  .grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  .viz-card{display:block; text-decoration:none; color:inherit;
+    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 24px;
+    transition:border-color .15s, transform .1s;}
+  .viz-card:hover{border-color:var(--accent-l); transform:translateY(-2px);}
+  .viz-card .top{display:flex; align-items:center; gap:14px; margin-bottom:10px;}
+  .viz-icon{width:44px; height:44px; border-radius:12px; background:#e3f4ee; color:var(--accent);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .viz-icon svg{width:24px; height:24px;}
+  .viz-card h2{font-size:20px; font-weight:600; margin:0;}
+  .viz-card p{font-size:15px; color:var(--muted); margin:0 0 12px;}
+  .tags{display:flex; gap:8px; flex-wrap:wrap;}
+  .tag{font-size:12px; color:var(--purple); background:#eeedfe; padding:3px 10px; border-radius:8px;}
+  .go{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600;
+    color:var(--accent); margin-top:14px;}
+
+  footer{text-align:center; margin-top:50px; font-size:13px; color:var(--faint);}
+  footer a{color:var(--accent); text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="course-tag">CSE2101 &middot; Data Structures</span>
+    <h1>Data Structures Visualizations</h1>
+    <p class="course-sub">Interactive simulations to see the algorithms work, step by step.</p>
+
+    <div class="prof">
+      <div class="avatar">AA</div>
+      <div class="info">
+        <p class="name">Md. Ahasanul Alam</p>
+        <p class="desig">Lecturer, Department of Computer Science and Engineering</p>
+      </div>
+    </div>
+  </header>
+
+  <p class="section-label">Visualizations</p>
+
+  <div class="grid">
+    <a class="viz-card" href="binary_search_suite.html">
+      <div class="top">
+        <div class="viz-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        </div>
+        <h2>Binary Search</h2>
+      </div>
+      <p>Three views of the same idea &mdash; halving the search space each step &mdash; across a sorted array, the nth root of a number, and the root of an equation.</p>
+      <div class="tags">
+        <span class="tag">sorted array</span>
+        <span class="tag">nth root</span>
+        <span class="tag">equation root</span>
+      </div>
+      <span class="go">Open visualization &rarr;</span>
+    </a>
+  </div>
+
+  <footer>
+    Built for teaching CSE2101. More visualizations coming as the course progresses.
+  </footer>
+</div>
+</body>
+</html>

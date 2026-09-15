@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Search Visualization</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%230f6e56%27/%3E%3Crect x=%2718%27 y=%2740%27 width=%2764%27 height=%2720%27 rx=%274%27 fill=%27%23afa9ec%27 opacity=%270.5%27/%3E%3Crect x=%2750%27 y=%2740%27 width=%2732%27 height=%2720%27 rx=%274%27 fill=%27%23e24b4a%27 opacity=%270.35%27/%3E%3Cline x1=%2750%27 y1=%2730%27 x2=%2750%27 y2=%2770%27 stroke=%27%231d9e75%27 stroke-width=%276%27/%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%277%27 fill=%27%231d9e75%27/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#faf9f5; --card:#ffffff; --ink:#2c2c2a; --muted:#5f5e5a; --faint:#888780;
+    --line:#d3d1c7; --line2:#b4b2a9;
+    --lo:#185fa5; --lo-d:#0c447c; --hi:#993c1d; --hi-d:#712b13;
+    --mid:#0f6e56; --mid-l:#1d9e75; --band:#afa9ec; --cut:#e24b4a;
+    --curve:#534ab7; --found:#639922;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6; padding:24px;}
+  .wrap{max-width:1000px; margin:0 auto;}
+  h1{font-size:28px; font-weight:600; text-align:center; margin:8px 0 18px;}
+
+  .tabs{display:flex; gap:6px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;}
+  .tab{font-size:15px; padding:10px 20px; border:1px solid var(--line2); border-radius:10px;
+    background:var(--card); color:var(--muted); cursor:pointer; transition:all .12s;}
+  .tab:hover{background:#f1efe8;}
+  .tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .panel{display:none;} .panel.active{display:block;}
+
+  .sub{text-align:center; color:var(--muted); font-size:15px; margin:0 0 20px;}
+  .controls{display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:16px;}
+  .ctl{display:flex; align-items:center; gap:9px;}
+  .ctl label{font-size:14px; color:var(--muted); white-space:nowrap;}
+  input[type=range]{width:150px; accent-color:var(--mid);}
+  select,input[type=number],input[type=text]{font-size:14px; padding:6px 10px; border:1px solid var(--line2);
+    border-radius:8px; background:var(--card); color:var(--ink);}
+  input[type=number]{width:80px;} input[type=text]{width:230px;}
+  .val{font-size:17px; font-weight:600; min-width:34px; text-align:center;}
+  .badge{text-align:center; font-size:19px; margin:0 0 12px;}
+  .badge b{font-weight:600;}
+  .stage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 12px 10px; margin-bottom:14px;}
+  .zoombar{text-align:center; font-size:13px; color:var(--faint); margin-top:2px; min-height:18px;}
+  .verdict{text-align:center; font-size:16px; color:var(--muted); min-height:26px; margin:10px 0 16px;}
+  .verdict sup{font-size:.7em;}
+  .btns{display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;}
+  button{font-size:15px; padding:9px 16px; border:1px solid var(--line2); border-radius:10px;
+    background:var(--card); color:var(--ink); cursor:pointer; transition:background .12s, transform .05s;}
+  button:hover{background:#f1efe8;} button:active{transform:scale(.97);}
+  button.primary{background:var(--mid); color:#fff; border-color:var(--mid);}
+  button.primary:hover{background:#0d5d49;}
+  .counter{font-size:14px; color:var(--faint); margin-left:6px;}
+  .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:18px;}
+  .mcard{background:var(--bg); border-radius:12px; padding:12px 14px;}
+  .mcard .k{font-size:12px; color:var(--muted); margin-bottom:3px;}
+  .mcard .v{font-size:19px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .mcard.lo .v{color:var(--lo);} .mcard.mid .v{color:var(--mid);} .mcard.hi .v{color:var(--hi);}
+  .mcard .f{font-size:11px; color:var(--faint); margin-top:2px;}
+  svg text{font-family:inherit;}
+  .hint{text-align:center; color:var(--faint); font-size:12px; margin-top:16px;}
+
+  /* array cells */
+  .arr{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:8px 0 4px;}
+  .cell{position:relative; width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--line2); border-radius:8px; font-size:17px; font-weight:600; background:var(--card);
+    transition:all .18s;}
+  .cell .idx{position:absolute; top:-18px; left:0; right:0; text-align:center; font-size:11px; font-weight:400; color:var(--faint);}
+  .cell.out{opacity:.28; background:var(--bg);}
+  .cell.range{border-color:var(--band); background:#efeefb;}
+  .cell.lo{border-color:var(--lo); box-shadow:0 0 0 2px #d5e4f5;}
+  .cell.hi{border-color:var(--hi); box-shadow:0 0 0 2px #f0dcd3;}
+  .cell.mid{border-color:var(--mid); background:#e3f4ee; box-shadow:0 0 0 2px #c4e9dd;}
+  .cell.found{border-color:var(--found); background:#eef6df; box-shadow:0 0 0 3px #d3e8ac;}
+  .ptrs{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:22px; min-height:20px;}
+  .ptr{width:52px; text-align:center; font-size:12px; font-weight:600;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Binary search — three ways</h1>
+
+  <div class="tabs">
+    <button class="tab active" data-p="arr">Sorted array</button>
+    <button class="tab" data-p="root">nth root</button>
+    <button class="tab" data-p="eq">Root of an equation</button>
+  </div>
+
+  <!-- ============ TAB 1: SORTED ARRAY ============ -->
+  <div class="panel active" id="p-arr">
+    <p class="sub">Search a sorted array: compare the target with the middle element, discard the half it can&rsquo;t be in.</p>
+    <div class="controls">
+      <div class="ctl"><label>Array</label><input type="text" id="a-list" value="3, 8, 12, 19, 23, 31, 42, 56, 70, 88"></div>
+      <div class="ctl"><label>Target</label><input type="number" id="a-target" value="42"></div>
+      <div class="ctl"><label>Speed</label><select id="a-speed"><option value="1300">slow</option><option value="850" selected>medium</option><option value="450">fast</option></select></div>
+    </div>
+    <div class="stage">
+      <div class="arr" id="a-cells"></div>
+      <div class="ptrs" id="a-ptrs"></div>
+    </div>
+    <div class="verdict" id="a-verdict">press &ldquo;next step&rdquo; to look at the middle element</div>
+    <div class="btns">
+      <button id="a-reset">&#8635; reset</button>
+      <button id="a-step" class="primary">next step &rarr;</button>
+      <button id="a-auto">&#9654; auto</button>
+      <span class="counter" id="a-counter">step 0</span>
+    </div>
+    <div class="cards">
+      <div class="mcard lo"><div class="k">lo (index)</div><div class="v" id="a-clo">0</div></div>
+      <div class="mcard mid"><div class="k">mid = (lo+hi)/2</div><div class="v" id="a-cmid">&mdash;</div><div class="f" id="a-fmid">arr[mid]=&mdash;</div></div>
+      <div class="mcard hi"><div class="k">hi (index)</div><div class="v" id="a-chi">9</div></div>
+    </div>
+    <p class="hint">Indices run left to right. The shaded cells are the live range [lo, hi]; green = mid being compared. Each comparison throws away roughly half the remaining cells, so a 10-element array needs at most 4 comparisons, a million elements only about 20.</p>
+  </div>
+
+  <!-- ============ TAB 2: NTH ROOT ============ -->
+  <div class="panel" id="p-root">
+    <p class="sub">Each step: cross out the half that can&rsquo;t contain the root, then zoom into what&rsquo;s left.</p>
+    <div class="controls">
+      <div class="ctl"><label for="r-x">Value</label><input type="number" id="r-x" value="50" min="0.01" step="1"></div>
+      <div class="ctl"><label for="r-n">Root n</label><input type="range" id="r-n" min="2" max="10" value="2" step="1"><span class="val" id="r-nout">2</span></div>
+      <div class="ctl"><label for="r-speed">Speed</label><select id="r-speed"><option value="1400">slow</option><option value="900" selected>medium</option><option value="500">fast</option></select></div>
+    </div>
+    <p class="badge">solving&nbsp; <b id="r-expr">x&sup2; = 50</b> &nbsp;&rarr;&nbsp; x = <span id="r-expr2">&#8730;50</span></p>
+    <div class="stage">
+      <svg id="r-nl" viewBox="0 0 940 170" width="100%" style="overflow:visible;">
+        <line x1="60" y1="100" x2="880" y2="100" stroke="var(--line2)" stroke-width="1.5"/>
+        <g id="r-ticks"></g>
+        <rect id="r-band" x="60" y="86" width="0" height="28" fill="var(--band)" opacity="0.35" rx="5"/>
+        <g id="r-cut" style="opacity:0"><rect id="r-cutrect" x="60" y="84" width="0" height="32" fill="var(--cut)" opacity="0.16" rx="5"/><line id="r-cutx1" x1="0" y1="86" x2="0" y2="114" stroke="var(--cut)" stroke-width="1.5"/><line id="r-cutx2" x1="0" y1="86" x2="0" y2="114" stroke="var(--cut)" stroke-width="1.5"/><text id="r-cutlabel" x="0" y="80" text-anchor="middle" font-size="11" fill="var(--cut)">discarded</text></g>
+        <g id="r-target"><line id="r-tline" x1="470" y1="82" x2="470" y2="118" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="4 3"/><text id="r-tlabel" x="470" y="76" text-anchor="middle" font-size="11" fill="var(--faint)">root</text></g>
+        <g id="r-lo"><line x1="60" y1="72" x2="60" y2="128" stroke="var(--lo)" stroke-width="2.5"/><text x="60" y="64" text-anchor="middle" font-size="13" fill="var(--lo-d)">lo</text><text id="r-lov" x="60" y="145" text-anchor="middle" font-size="12" fill="var(--lo)"></text></g>
+        <g id="r-hi"><line x1="880" y1="72" x2="880" y2="128" stroke="var(--hi)" stroke-width="2.5"/><text x="880" y="64" text-anchor="middle" font-size="13" fill="var(--hi-d)">hi</text><text id="r-hiv" x="880" y="145" text-anchor="middle" font-size="12" fill="var(--hi)"></text></g>
+        <g id="r-mid"><line x1="470" y1="68" x2="470" y2="132" stroke="var(--mid)" stroke-width="3"/><circle cx="470" cy="100" r="6" fill="var(--mid-l)"/><text x="470" y="58" text-anchor="middle" font-size="13" fill="var(--mid)">mid</text><text id="r-midv" x="470" y="162" text-anchor="middle" font-size="12" fill="var(--mid)"></text></g>
+      </svg>
+      <div class="zoombar" id="r-zoombar"></div>
+    </div>
+    <div class="verdict" id="r-verdict">press &ldquo;next step&rdquo; to evaluate the midpoint</div>
+    <div class="btns">
+      <button id="r-reset">&#8635; reset</button>
+      <button id="r-step" class="primary">next step &rarr;</button>
+      <button id="r-auto">&#9654; auto</button>
+      <span class="counter" id="r-counter">step 0</span>
+    </div>
+    <div class="cards">
+      <div class="mcard lo"><div class="k">lo</div><div class="v" id="r-clo">0</div></div>
+      <div class="mcard mid"><div class="k">mid = (lo+hi)/2</div><div class="v" id="r-cmid">&mdash;</div></div>
+      <div class="mcard hi"><div class="k">hi</div><div class="v" id="r-chi">50</div></div>
+    </div>
+    <p class="hint">The dashed line is the true root. Click once to evaluate mid and cross out the dead half; click again to zoom into the survivor.</p>
+  </div>
+
+  <!-- ============ TAB 3: EQUATION ROOT ============ -->
+  <div class="panel" id="p-eq">
+    <p class="sub">Bisection: keep the half whose endpoints have opposite signs &mdash; the root must lie there.</p>
+    <div class="controls">
+      <div class="ctl"><label for="e-fn">f(x)</label><select id="e-fn">
+        <option value="0">x&sup2; &minus; 2  (root &radic;2)</option>
+        <option value="1">x&sup3; &minus; x &minus; 2</option>
+        <option value="2">e^x &minus; 3x</option>
+        <option value="3">ln(x) + x &minus; 3</option>
+        <option value="4">x&sup3; + x &minus; 5</option>
+      </select></div>
+      <div class="ctl"><label for="e-a">lo</label><input type="number" id="e-a" value="0" step="0.5"></div>
+      <div class="ctl"><label for="e-b">hi</label><input type="number" id="e-b" value="2" step="0.5"></div>
+      <div class="ctl"><label for="e-speed">Speed</label><select id="e-speed"><option value="1400">slow</option><option value="900" selected>medium</option><option value="500">fast</option></select></div>
+    </div>
+    <p class="badge">solving&nbsp; <b id="e-fnlabel" style="color:var(--curve)">x&sup2; &minus; 2 = 0</b></p>
+    <div class="stage">
+      <svg id="e-plot" viewBox="0 0 940 320" width="100%" style="overflow:visible;">
+        <g id="e-grid"></g>
+        <line id="e-axis" x1="60" y1="160" x2="880" y2="160" stroke="var(--line2)" stroke-width="1.2"/>
+        <path id="e-curve" d="" fill="none" stroke="var(--curve)" stroke-width="2.5"/>
+        <rect id="e-cut" x="0" y="20" width="0" height="280" fill="var(--cut)" opacity="0" rx="4"/>
+        <g id="e-loMark"><line x1="60" y1="20" x2="60" y2="300" stroke="var(--lo)" stroke-width="1.5" stroke-dasharray="3 3"/><circle id="e-loDot" cx="60" cy="160" r="5" fill="var(--lo)"/><text id="e-loTxt" x="60" y="315" text-anchor="middle" font-size="12" fill="var(--lo)">lo</text></g>
+        <g id="e-hiMark"><line x1="880" y1="20" x2="880" y2="300" stroke="var(--hi)" stroke-width="1.5" stroke-dasharray="3 3"/><circle id="e-hiDot" cx="880" cy="160" r="5" fill="var(--hi)"/><text id="e-hiTxt" x="880" y="315" text-anchor="middle" font-size="12" fill="var(--hi)">hi</text></g>
+        <g id="e-midMark" style="opacity:0"><line id="e-midLine" x1="470" y1="20" x2="470" y2="300" stroke="var(--mid)" stroke-width="2"/><circle id="e-midDot" cx="470" cy="160" r="6" fill="var(--mid-l)"/><text id="e-midTxt" x="470" y="14" text-anchor="middle" font-size="12" fill="var(--mid)">mid</text></g>
+      </svg>
+      <div class="zoombar" id="e-zoombar"></div>
+    </div>
+    <div class="verdict" id="e-verdict">press &ldquo;next step&rdquo; to evaluate the midpoint</div>
+    <div class="btns">
+      <button id="e-reset">&#8635; reset</button>
+      <button id="e-step" class="primary">next step &rarr;</button>
+      <button id="e-auto">&#9654; auto</button>
+      <span class="counter" id="e-counter">step 0</span>
+    </div>
+    <div class="cards">
+      <div class="mcard lo"><div class="k">lo</div><div class="v" id="e-clo">0</div><div class="f" id="e-flo">f(lo)=&mdash;</div></div>
+      <div class="mcard mid"><div class="k">mid = (lo+hi)/2</div><div class="v" id="e-cmid">&mdash;</div><div class="f" id="e-fmid">f(mid)=&mdash;</div></div>
+      <div class="mcard hi"><div class="k">hi</div><div class="v" id="e-chi">2</div><div class="f" id="e-fhi">f(hi)=&mdash;</div></div>
+    </div>
+    <p class="hint">The purple curve is f(x); the root is where it crosses zero. Each step keeps the half where f changes sign (one end &plus;, one end &minus;).</p>
+  </div>
+</div>
+
+<script>
+/* ================= TAB SWITCHING ================= */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    document.getElementById('p-'+t.dataset.p).classList.add('active');
+  });
+});
+
+/* ================= TAB 1: SORTED ARRAY ================= */
+(function(){
+  var arr=[], target=42, lo=0, hi=0, mid=null, steps=0, timer=null, done=false, foundIdx=-1;
+  function parseArr(){
+    var raw=document.getElementById('a-list').value.split(',').map(function(s){return parseFloat(s.trim());}).filter(function(v){return !isNaN(v);});
+    raw.sort(function(a,b){return a-b;});
+    return raw;
+  }
+  function renderCells(){
+    var c=document.getElementById('a-cells'); c.innerHTML='';
+    var p=document.getElementById('a-ptrs'); p.innerHTML='';
+    for(var i=0;i<arr.length;i++){
+      var cls='cell';
+      if(done && i===foundIdx) cls+=' found';
+      else if(i<lo||i>hi) cls+=' out';
+      else{ cls+=' range'; if(i===mid) cls+=' mid'; if(i===lo) cls+=' lo'; if(i===hi) cls+=' hi'; }
+      c.innerHTML+='<div class="'+cls+'"><span class="idx">'+i+'</span>'+arr[i]+'</div>';
+      var lab='';
+      if(i===lo) lab+='lo'; if(i===hi) lab+=(lab?'/':'')+'hi'; if(i===mid&&!done) lab+=(lab?' ':'')+'mid';
+      p.innerHTML+='<div class="ptr" style="color:'+(i===mid&&!done?'var(--mid)':(i===lo?'var(--lo)':(i===hi?'var(--hi)':'transparent')))+'">'+(lab||'&nbsp;')+'</div>';
+    }
+    document.getElementById('a-clo').textContent=lo;
+    document.getElementById('a-chi').textContent=hi;
+    document.getElementById('a-cmid').textContent=mid===null?'\u2014':mid;
+    document.getElementById('a-fmid').innerHTML=mid===null?'arr[mid]=\u2014':('arr['+mid+'] = '+arr[mid]);
+    document.getElementById('a-counter').textContent='step '+steps;
+  }
+  function reset(){
+    arr=parseArr(); target=parseFloat(document.getElementById('a-target').value);
+    lo=0; hi=arr.length-1; mid=null; steps=0; done=false; foundIdx=-1;
+    clearInterval(timer); timer=null; document.getElementById('a-auto').innerHTML='&#9654; auto';
+    renderCells();
+    document.getElementById('a-verdict').innerHTML='searching for <b>'+target+'</b> \u2014 press \u201cnext step\u201d to look at the middle element';
+  }
+  function step(){
+    if(done) return;
+    if(lo>hi){ done=true; document.getElementById('a-verdict').innerHTML='<span style="color:var(--cut)">lo &gt; hi \u2014 '+target+' is not in the array.</span>'; clearInterval(timer); timer=null; document.getElementById('a-auto').innerHTML='&#9654; auto'; renderCells(); return; }
+    mid=Math.floor((lo+hi)/2); steps++;
+    if(arr[mid]===target){
+      done=true; foundIdx=mid;
+      document.getElementById('a-verdict').innerHTML='arr['+mid+'] = '+arr[mid]+' = target \u2014 <b style="color:var(--found)">found at index '+mid+'</b>';
+      clearInterval(timer); timer=null; document.getElementById('a-auto').innerHTML='&#9654; auto'; renderCells(); return;
+    } else if(arr[mid]<target){
+      document.getElementById('a-verdict').innerHTML='arr['+mid+'] = '+arr[mid]+' &lt; '+target+' \u2014 target is to the right, set <b style="color:var(--lo)">lo = mid+1</b>';
+      lo=mid+1;
+    } else {
+      document.getElementById('a-verdict').innerHTML='arr['+mid+'] = '+arr[mid]+' &gt; '+target+' \u2014 target is to the left, set <b style="color:var(--hi)">hi = mid&minus;1</b>';
+      hi=mid-1;
+    }
+    renderCells();
+  }
+  document.getElementById('a-list').addEventListener('change',reset);
+  document.getElementById('a-target').addEventListener('change',reset);
+  document.getElementById('a-step').addEventListener('click',step);
+  document.getElementById('a-reset').addEventListener('click',reset);
+  document.getElementById('a-auto').addEventListener('click',function(){
+    if(timer){ clearInterval(timer); timer=null; this.innerHTML='&#9654; auto'; }
+    else{ this.innerHTML='&#10073;&#10073; pause'; var sp=parseInt(document.getElementById('a-speed').value,10), self=this;
+      timer=setInterval(function(){ if(done){clearInterval(timer);timer=null; self.innerHTML='&#9654; auto'; return;} step(); }, sp); }
+  });
+  reset();
+})();
+
+/* ================= TAB 2: NTH ROOT ================= */
+(function(){
+  var X=50, N=2, lo=0, hi=50, mid=null, steps=0, timer=null, done=false, phase='ready';
+  var PAD_L=60, PAD_R=880, vmin=0, vmax=50, tmin=0, tmax=50, animRAF=null, pendingLo=0, pendingHi=50;
+  function root(){ return Math.pow(X,1/N); }
+  function computeTarget(l,h){ var span=h-l, pad=Math.max(span*0.6,1e-4), loW=l-pad, hiW=h+pad, r=root();
+    if(r<loW) loW=r-pad; if(r>hiW) hiW=r+pad; if(hiW-loW<1e-9){loW-=0.5;hiW+=0.5;} tmin=loW; tmax=hiW; }
+  function px(v){ return PAD_L+(v-vmin)/(vmax-vmin)*(PAD_R-PAD_L); }
+  function niceStep(range){ var raw=range/6, mag=Math.pow(10,Math.floor(Math.log10(raw))), norm=raw/mag; var s=norm<1.5?1:norm<3?2:norm<7?5:10; return s*mag; }
+  function decimals(s){ if(s>=1) return 0; return Math.min(6,Math.max(0,Math.ceil(-Math.log10(s)))); }
+  function drawTicks(){ var g=document.getElementById('r-ticks'); g.innerHTML='';
+    var range=vmax-vmin, s=niceStep(range), d=decimals(s), start=Math.ceil(vmin/s)*s;
+    for(var val=start; val<=vmax+1e-9; val+=s){ var x=px(val); if(x<PAD_L-1||x>PAD_R+1) continue;
+      g.innerHTML+='<line x1="'+x+'" y1="95" x2="'+x+'" y2="105" stroke="var(--line2)" stroke-width="1"/><text x="'+x+'" y="120" text-anchor="middle" font-size="11" fill="var(--faint)">'+val.toFixed(d)+'</text>'; } }
+  function place(gid,v){ var base=gid==='r-lo'?60:gid==='r-hi'?880:470; document.getElementById(gid).setAttribute('transform','translate('+(px(v)-base)+',0)'); }
+  function renderStatic(){
+    document.getElementById('r-lov').textContent=lo.toFixed(4); document.getElementById('r-hiv').textContent=hi.toFixed(4);
+    place('r-lo',lo); place('r-hi',hi);
+    var band=document.getElementById('r-band'), lx=px(lo), hx=px(hi); band.setAttribute('x',lx); band.setAttribute('width',Math.max(0,hx-lx));
+    var tx=px(root()); document.getElementById('r-tline').setAttribute('x1',tx); document.getElementById('r-tline').setAttribute('x2',tx); document.getElementById('r-tlabel').setAttribute('x',tx);
+    var mg=document.getElementById('r-mid');
+    if(mid===null){ mg.style.opacity=0; } else { mg.style.opacity=1; place('r-mid',mid); document.getElementById('r-midv').textContent=mid.toFixed(4); }
+    if(phase==='cut' && mid!==null){ var cg=document.getElementById('r-cut'); cg.style.opacity=1;
+      var cutLo,cutHi; if(pendingLo===mid){cutLo=lo;cutHi=mid;}else{cutLo=mid;cutHi=hi;}
+      var cx=px(cutLo), cw=px(cutHi)-px(cutLo); var cr=document.getElementById('r-cutrect'); cr.setAttribute('x',cx); cr.setAttribute('width',Math.max(0,cw));
+      document.getElementById('r-cutx1').setAttribute('x1',cx); document.getElementById('r-cutx1').setAttribute('x2',cx+cw);
+      document.getElementById('r-cutx2').setAttribute('x1',cx+cw); document.getElementById('r-cutx2').setAttribute('x2',cx);
+      document.getElementById('r-cutlabel').setAttribute('x',cx+cw/2);
+    } else document.getElementById('r-cut').style.opacity=0;
+    document.getElementById('r-clo').textContent=lo.toFixed(5); document.getElementById('r-chi').textContent=hi.toFixed(5); document.getElementById('r-cmid').textContent=mid===null?'\u2014':mid.toFixed(5);
+    document.getElementById('r-counter').textContent='step '+steps;
+    var zf=50/(vmax-vmin); document.getElementById('r-zoombar').textContent=(vmax-vmin<49.9)?('zoomed '+(zf>=10?zf.toFixed(0):zf.toFixed(1))+'\u00d7 \u2014 window ['+vmin.toFixed(4)+', '+vmax.toFixed(4)+']'):'';
+  }
+  function animate(){ var d=Math.abs(vmin-tmin)<1e-7&&Math.abs(vmax-tmax)<1e-7; vmin+=(tmin-vmin)*0.18; vmax+=(tmax-vmax)*0.18; if(d){vmin=tmin;vmax=tmax;} drawTicks(); renderStatic(); if(!d) animRAF=requestAnimationFrame(animate); else animRAF=null; }
+  function kickAnim(){ if(animRAF) cancelAnimationFrame(animRAF); animRAF=requestAnimationFrame(animate); }
+  function setExpr(){ var sup=N===2?'&sup2;':N===3?'&sup3;':'<sup>'+N+'</sup>'; document.getElementById('r-expr').innerHTML='x'+sup+' = '+fmtX(); document.getElementById('r-expr2').innerHTML=N===2?('&#8730;'+fmtX()):(fmtX()+'<sup>1/'+N+'</sup>'); }
+  function fmtX(){ return (X%1===0)?X.toFixed(0):X.toString(); }
+  function supStr(){ return N===2?'&sup2;':N===3?'&sup3;':'<sup>'+N+'</sup>'; }
+  function reset(){
+    X=parseFloat(document.getElementById('r-x').value)||50; if(X<=0)X=0.01; N=parseInt(document.getElementById('r-n').value,10);
+    lo=0; hi=Math.max(1,X); mid=null; steps=0; done=false; phase='ready';
+    vmin=0; vmax=Math.max(1,X); tmin=vmin; tmax=vmax; clearInterval(timer); timer=null;
+    document.getElementById('r-auto').innerHTML='&#9654; auto'; document.getElementById('r-cut').style.opacity=0;
+    setExpr(); drawTicks(); renderStatic(); document.getElementById('r-verdict').innerHTML='press \u201cnext step\u201d to evaluate the midpoint';
+  }
+  function evaluate(){
+    if(hi-lo<=1e-4){ done=true; document.getElementById('r-verdict').innerHTML='converged \u2014 root \u2248 <b>'+lo.toFixed(5)+'</b>&nbsp; (true '+root().toFixed(5)+')'; clearInterval(timer); timer=null; document.getElementById('r-auto').innerHTML='&#9654; auto'; return; }
+    mid=(lo+hi)/2; steps++; var p=Math.pow(mid,N);
+    if(p<X){ pendingLo=mid; pendingHi=hi; document.getElementById('r-verdict').innerHTML='mid'+supStr()+' = '+p.toFixed(3)+' &lt; '+fmtX()+' &rarr; root is higher \u2014 discard <b style="color:var(--cut)">[lo, mid]</b>'; }
+    else { pendingLo=lo; pendingHi=mid; document.getElementById('r-verdict').innerHTML='mid'+supStr()+' = '+p.toFixed(3)+' &ge; '+fmtX()+' &rarr; root is lower \u2014 discard <b style="color:var(--cut)">[mid, hi]</b>'; }
+    phase='cut'; renderStatic();
+  }
+  function applyAndZoom(){ lo=pendingLo; hi=pendingHi; mid=null; phase='ready'; document.getElementById('r-cut').style.opacity=0;
+    document.getElementById('r-verdict').innerHTML='kept the surviving half \u2014 new interval ['+lo.toFixed(4)+', '+hi.toFixed(4)+']'; computeTarget(lo,hi); kickAnim(); }
+  function step(){ if(done) return; if(phase==='ready') evaluate(); else applyAndZoom(); }
+  document.getElementById('r-n').addEventListener('input',function(){document.getElementById('r-nout').textContent=this.value; reset();});
+  document.getElementById('r-x').addEventListener('change',reset);
+  document.getElementById('r-step').addEventListener('click',step);
+  document.getElementById('r-reset').addEventListener('click',reset);
+  document.getElementById('r-auto').addEventListener('click',function(){ if(timer){clearInterval(timer);timer=null;this.innerHTML='&#9654; auto';}
+    else{ this.innerHTML='&#10073;&#10073; pause'; var sp=parseInt(document.getElementById('r-speed').value,10), self=this;
+      timer=setInterval(function(){ if(done){clearInterval(timer);timer=null;self.innerHTML='&#9654; auto';return;} step(); }, sp); } });
+  reset();
+})();
+
+/* ================= TAB 3: EQUATION ROOT ================= */
+(function(){
+  var FNS=[
+    {f:function(x){return x*x-2;}, label:"x&sup2; &minus; 2 = 0"},
+    {f:function(x){return x*x*x-x-2;}, label:"x&sup3; &minus; x &minus; 2 = 0"},
+    {f:function(x){return Math.exp(x)-3*x;}, label:"e^x &minus; 3x = 0"},
+    {f:function(x){return Math.log(x)+x-3;}, label:"ln(x) + x &minus; 3 = 0"},
+    {f:function(x){return x*x*x+x-5;}, label:"x&sup3; + x &minus; 5 = 0"}
+  ];
+  var PAD_L=60, PAD_R=880, Y0=160, YH=120;
+  var fi=0, f=FNS[0].f, lo=0, hi=2, mid=null, steps=0, timer=null, done=false, phase='ready';
+  var pendingLo=0, pendingHi=2, vmin=0, vmax=2, tmin=0, tmax=2, animRAF=null, yscale=1, tminInit=0, tmaxInit=2;
+  function px(x){ return PAD_L+(x-vmin)/(vmax-vmin)*(PAD_R-PAD_L); }
+  function py(y){ return Y0-y*yscale; }
+  function computeYScale(){ var maxAbs=1e-6; for(var i=0;i<=120;i++){ var x=vmin+(vmax-vmin)*i/120, y=f(x); if(isFinite(y)) maxAbs=Math.max(maxAbs,Math.abs(y)); } yscale=YH/maxAbs; }
+  function niceStep(range){ var raw=range/6, mag=Math.pow(10,Math.floor(Math.log10(raw))), norm=raw/mag; var s=norm<1.5?1:norm<3?2:norm<7?5:10; return s*mag; }
+  function decimals(s){ if(s>=1) return 0; return Math.min(6,Math.max(0,Math.ceil(-Math.log10(s)))); }
+  function drawGrid(){ var g=document.getElementById('e-grid'); g.innerHTML='';
+    var range=vmax-vmin, s=niceStep(range), d=decimals(s), start=Math.ceil(vmin/s)*s;
+    for(var val=start; val<=vmax+1e-9; val+=s){ var x=px(val); if(x<PAD_L-1||x>PAD_R+1) continue;
+      g.innerHTML+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="300" stroke="var(--line)" stroke-width="1"/><text x="'+x+'" y="316" text-anchor="middle" font-size="10" fill="var(--faint)">'+val.toFixed(d)+'</text>'; } }
+  function drawCurve(){ computeYScale(); var dstr='', n=240;
+    for(var i=0;i<=n;i++){ var x=vmin+(vmax-vmin)*i/n, y=f(x); if(!isFinite(y)) continue; var Y=Math.max(22,Math.min(298,py(y))); dstr+=(i===0?'M':'L')+px(x).toFixed(1)+' '+Y.toFixed(1)+' '; }
+    document.getElementById('e-curve').setAttribute('d',dstr); }
+  function fmt(v){ return (Math.abs(v)>=100||v===0)?v.toFixed(2):v.toFixed(4); }
+  function sign(v){ return v>0?'+':v<0?'&minus;':'0'; }
+  function signWord(v){ return v>0?'positive':v<0?'negative':'zero'; }
+  function renderMarkers(){
+    var lx=px(lo), hx=px(hi);
+    document.getElementById('e-loMark').setAttribute('transform','translate('+(lx-60)+',0)');
+    document.getElementById('e-hiMark').setAttribute('transform','translate('+(hx-880)+',0)');
+    document.getElementById('e-loDot').setAttribute('cy',Math.max(22,Math.min(298,py(f(lo)))));
+    document.getElementById('e-hiDot').setAttribute('cy',Math.max(22,Math.min(298,py(f(hi)))));
+    document.getElementById('e-loTxt').textContent='lo '+lo.toFixed(3);
+    document.getElementById('e-hiTxt').textContent='hi '+hi.toFixed(3);
+    var mm=document.getElementById('e-midMark');
+    if(mid===null){ mm.style.opacity=0; } else { mm.style.opacity=1; mm.setAttribute('transform','translate('+(px(mid)-470)+',0)'); document.getElementById('e-midDot').setAttribute('cy',Math.max(22,Math.min(298,py(f(mid))))); document.getElementById('e-midTxt').textContent='mid '+mid.toFixed(3); }
+    var cut=document.getElementById('e-cut');
+    if(phase==='cut' && mid!==null){ var cutLo,cutHi; if(pendingLo===mid){cutLo=lo;cutHi=mid;}else{cutLo=mid;cutHi=hi;} cut.setAttribute('x',px(cutLo)); cut.setAttribute('width',Math.max(0,px(cutHi)-px(cutLo))); cut.setAttribute('opacity','0.12'); } else cut.setAttribute('opacity','0');
+    document.getElementById('e-clo').textContent=lo.toFixed(4); document.getElementById('e-chi').textContent=hi.toFixed(4); document.getElementById('e-cmid').textContent=mid===null?'\u2014':mid.toFixed(4);
+    document.getElementById('e-flo').innerHTML='f(lo) = '+fmt(f(lo))+' ('+sign(f(lo))+')'; document.getElementById('e-fhi').innerHTML='f(hi) = '+fmt(f(hi))+' ('+sign(f(hi))+')';
+    document.getElementById('e-fmid').innerHTML=mid===null?'f(mid)=\u2014':('f(mid) = '+fmt(f(mid))+' ('+sign(f(mid))+')');
+    document.getElementById('e-counter').textContent='step '+steps;
+    var zf=(tmaxInit-tminInit)/(vmax-vmin); document.getElementById('e-zoombar').textContent=(vmax-vmin<(tmaxInit-tminInit)-1e-6)?('zoomed '+(zf>=10?zf.toFixed(0):zf.toFixed(1))+'\u00d7 \u2014 window ['+vmin.toFixed(4)+', '+vmax.toFixed(4)+']'):'';
+  }
+  function redraw(){ drawGrid(); drawCurve(); renderMarkers(); }
+  function computeTarget(l,h){ var span=h-l, pad=Math.max(span*0.35,1e-6); tmin=l-pad; tmax=h+pad; }
+  function animate(){ var d=Math.abs(vmin-tmin)<1e-7&&Math.abs(vmax-tmax)<1e-7; vmin+=(tmin-vmin)*0.18; vmax+=(tmax-vmax)*0.18; if(d){vmin=tmin;vmax=tmax;} redraw(); if(!d) animRAF=requestAnimationFrame(animate); else animRAF=null; }
+  function kickAnim(){ if(animRAF) cancelAnimationFrame(animRAF); animRAF=requestAnimationFrame(animate); }
+  function reset(){
+    fi=parseInt(document.getElementById('e-fn').value,10); f=FNS[fi].f;
+    lo=parseFloat(document.getElementById('e-a').value); hi=parseFloat(document.getElementById('e-b').value);
+    if(hi<lo){ var t=lo; lo=hi; hi=t; }
+    mid=null; steps=0; done=false; phase='ready';
+    vmin=lo-(hi-lo)*0.15; vmax=hi+(hi-lo)*0.15; tmin=vmin; tmax=vmax; tminInit=vmin; tmaxInit=vmax;
+    clearInterval(timer); timer=null; document.getElementById('e-auto').innerHTML='&#9654; auto';
+    document.getElementById('e-fnlabel').innerHTML=FNS[fi].label; redraw();
+    var fl=f(lo), fh=f(hi);
+    if(fl*fh>0){ document.getElementById('e-verdict').innerHTML='<span style="color:var(--cut)">f(lo) and f(hi) have the same sign \u2014 no guaranteed root here. Widen [lo, hi].</span>'; }
+    else { document.getElementById('e-verdict').innerHTML='f(lo) is '+signWord(fl)+', f(hi) is '+signWord(fh)+' \u2014 a root lies between. Press \u201cnext step\u201d.'; }
+  }
+  function evaluate(){
+    var fl=f(lo), fh=f(hi); if(fl*fh>0) return;
+    if(hi-lo<=1e-5){ done=true; document.getElementById('e-verdict').innerHTML='converged \u2014 root \u2248 <b>'+((lo+hi)/2).toFixed(5)+'</b>'; clearInterval(timer); timer=null; document.getElementById('e-auto').innerHTML='&#9654; auto'; return; }
+    mid=(lo+hi)/2; steps++; var fm=f(mid);
+    if(fl*fm<0){ pendingLo=lo; pendingHi=mid; document.getElementById('e-verdict').innerHTML='f(mid) is '+signWord(fm)+' \u2014 sign change on <b>[lo, mid]</b>, discard <b style="color:var(--cut)">[mid, hi]</b>'; }
+    else { pendingLo=mid; pendingHi=hi; document.getElementById('e-verdict').innerHTML='f(mid) is '+signWord(fm)+' \u2014 sign change on <b>[mid, hi]</b>, discard <b style="color:var(--cut)">[lo, mid]</b>'; }
+    phase='cut'; renderMarkers();
+  }
+  function applyAndZoom(){ lo=pendingLo; hi=pendingHi; mid=null; phase='ready'; document.getElementById('e-cut').setAttribute('opacity','0');
+    document.getElementById('e-verdict').innerHTML='kept the half that brackets the root \u2014 new interval ['+lo.toFixed(4)+', '+hi.toFixed(4)+']'; computeTarget(lo,hi); kickAnim(); }
+  function step(){ if(done) return; if(phase==='ready') evaluate(); else applyAndZoom(); }
+  document.getElementById('e-fn').addEventListener('change',function(){ var presets={0:[0,2],1:[1,2],2:[0,1],3:[1,3],4:[1,2]}; var p=presets[parseInt(this.value,10)]; document.getElementById('e-a').value=p[0]; document.getElementById('e-b').value=p[1]; reset(); });
+  document.getElementById('e-a').addEventListener('change',reset);
+  document.getElementById('e-b').addEventListener('change',reset);
+  document.getElementById('e-step').addEventListener('click',step);
+  document.getElementById('e-reset').addEventListener('click',reset);
+  document.getElementById('e-auto').addEventListener('click',function(){ if(timer){clearInterval(timer);timer=null;this.innerHTML='&#9654; auto';}
+    else{ this.innerHTML='&#10073;&#10073; pause'; var sp=parseInt(document.getElementById('e-speed').value,10), self=this;
+      timer=setInterval(function(){ if(done){clearInterval(timer);timer=null;self.innerHTML='&#9654; auto';return;} step(); }, sp); } });
+  reset();
+})();
+</script>
+</body>
+</html>
