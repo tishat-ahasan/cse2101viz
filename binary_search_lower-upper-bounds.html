@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binary Search — Upper &amp; Lower Bound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0f1117;--ink-2:#3a3d4a;--ink-3:#6b7080;--ink-4:#9aa0b0;
+  --surface:#f7f8fc;--card:#ffffff;--rule:#e2e5ef;
+  --lb:#2563eb;--lb-tint:#eff4ff;--lb-mid:#93b8fa;
+  --ub:#7c3aed;--ub-tint:#f5f0ff;--ub-mid:#c4a8fa;
+  --ok:#059669;--ok-tint:#ecfdf5;
+  --mid-hl:#f59e0b;--mid-tint:#fffbeb;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',sans-serif;
+  --serif:'Playfair Display',Georgia,serif;
+  --radius:10px;--r-lg:16px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--surface);color:var(--ink);line-height:1.6;font-size:15px}
+.page-wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+
+/* Hero */
+.hero{padding:72px 0 56px;border-bottom:1px solid var(--rule);margin-bottom:56px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--lb);letter-spacing:.04em;margin-bottom:20px}
+.hero-eyebrow span{display:inline-block;width:28px;height:1px;background:var(--lb)}
+.hero h1{font-family:var(--serif);font-size:clamp(36px,6vw,60px);font-weight:700;line-height:1.1;margin-bottom:8px}
+.hero h1 em{font-style:italic;color:var(--lb)}
+.hero-sub{font-size:16px;color:var(--ink-3);max-width:500px;margin-bottom:32px;line-height:1.7}
+.hero-stats{display:flex;gap:40px;flex-wrap:wrap}
+.stat-num{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.stat-label{font-size:12px;color:var(--ink-4);margin-top:2px}
+
+/* Nav */
+.chapter-nav{position:sticky;top:0;z-index:50;background:rgba(247,248,252,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);margin:0 -24px 48px;padding:0 24px;overflow-x:auto;white-space:nowrap}
+.chapter-nav-inner{display:flex}
+.ch-tab{display:inline-block;padding:14px 20px;font-size:13px;font-weight:500;color:var(--ink-3);border-bottom:2px solid transparent;cursor:pointer;transition:color .2s,border-color .2s;text-decoration:none;white-space:nowrap}
+.ch-tab:hover{color:var(--ink)}
+.ch-tab.active{color:var(--lb);border-bottom-color:var(--lb)}
+
+/* Section */
+.section{margin-bottom:72px}
+.section-label{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink-4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.section-title{font-family:var(--serif);font-size:28px;font-weight:700;line-height:1.2;margin-bottom:16px}
+.section-body{font-size:15px;color:var(--ink-2);line-height:1.75;max-width:660px}
+.section-body+.section-body{margin-top:12px}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:24px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--ink-3);margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em;font-family:var(--mono)}
+
+/* Def blocks */
+.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+@media(max-width:600px){.def-grid{grid-template-columns:1fr}}
+.def-block{border-radius:var(--radius);padding:20px;border:1px solid}
+.def-block.lb{background:var(--lb-tint);border-color:var(--lb-mid)}
+.def-block.ub{background:var(--ub-tint);border-color:var(--ub-mid)}
+.def-tag{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:8px}
+.def-tag.lb{color:var(--lb)}.def-tag.ub{color:var(--ub)}
+.def-block h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.def-block p{font-size:14px;color:var(--ink-2);line-height:1.65}
+
+/* Insight */
+.insight{background:var(--mid-tint);border:1px solid #fcd34d;border-left:4px solid var(--mid-hl);border-radius:var(--radius);padding:16px 20px;font-size:14px;color:var(--ink-2);line-height:1.7;margin:20px 0}
+.insight strong{color:var(--ink)}
+code{font-family:var(--mono);font-size:.88em;background:#e8eaf4;padding:1px 5px;border-radius:4px}
+
+/* Static concept array */
+.concept-arr-wrap{margin:28px 0}
+.concept-arr{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.c-cell{display:flex;flex-direction:column;align-items:center;gap:4px}
+.c-box{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:18px;font-weight:700;border:1.5px solid var(--rule);background:var(--card);color:var(--ink)}
+.c-box.target-val{background:#ecfdf5;border-color:#6ee7b7;color:var(--ok)}
+.c-box.lb-mark{background:var(--lb-tint);border-color:var(--lb);color:var(--lb)}
+.c-box.ub-mark{background:var(--ub-tint);border-color:var(--ub);color:var(--ub)}
+.c-idx{font-family:var(--mono);font-size:11px;color:var(--ink-4)}
+.c-ann{font-size:10px;font-weight:600;height:18px;display:flex;align-items:center}
+.ann-lb{color:var(--lb);background:var(--lb-tint);padding:1px 6px;border-radius:4px}
+.ann-ub{color:var(--ub);background:var(--ub-tint);padding:1px 6px;border-radius:4px}
+.arr-caption{margin-top:12px;font-size:13px;color:var(--ink-3);line-height:1.6}
+
+/* Code blocks */
+.pseudo-wrap{background:#0f1117;border-radius:var(--r-lg);padding:24px;overflow-x:auto;margin:20px 0;border:1px solid #2a2d3a}
+.pseudo-wrap pre{font-family:var(--mono);font-size:13.5px;line-height:1.9;color:#cdd6f4;margin:0;white-space:pre}
+.pseudo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pseudo-lang{font-family:var(--mono);font-size:11px;color:#585b70;letter-spacing:.06em;text-transform:uppercase}
+.pseudo-title{font-family:var(--mono);font-size:13px;font-weight:600;color:#89b4fa}
+.kw{color:#89b4fa}.cm{color:#585b70;font-style:italic}.fn{color:#89dceb}
+.num{color:#fab387}.key{color:#f38ba8;font-weight:700}.good{color:#a6e3a1}.var{color:#cba6f7}
+.ty{color:#f9e2af}.pp{color:#cba6f7}  /* type, preprocessor */
+
+/* Library table */
+.lib-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+.lib-table th{background:#1e2030;color:#89b4fa;font-family:var(--mono);font-size:12px;font-weight:600;padding:10px 14px;text-align:left;border-bottom:1px solid #2a2d3a;letter-spacing:.04em}
+.lib-table td{padding:10px 14px;border-bottom:1px solid #2a2d3a;color:#cdd6f4;font-family:var(--mono);font-size:13px;vertical-align:top}
+.lib-table td:first-child{color:#89dceb;white-space:nowrap}
+.lib-table td.desc{color:#9aa0b0;font-family:var(--sans);font-size:13px}
+.lib-table tr:last-child td{border-bottom:none}
+
+/* Diff */
+.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:600px){.diff-grid{grid-template-columns:1fr}}
+.diff-block{background:#0f1117;border-radius:var(--radius);padding:18px;border:1px solid #2a2d3a}
+.diff-label{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:10px;padding:3px 8px;border-radius:4px;display:inline-block}
+.diff-label.lb{background:rgba(37,99,235,.25);color:#93b8fa}
+.diff-label.ub{background:rgba(124,58,237,.25);color:#c4a8fa}
+.diff-block pre{font-family:var(--mono);font-size:13px;line-height:1.9;color:#cdd6f4;white-space:pre}
+.diff-hl-lb{background:rgba(37,99,235,.3);border-radius:3px;padding:1px 4px;color:#93b8fa;font-weight:700}
+.diff-hl-ub{background:rgba(124,58,237,.3);border-radius:3px;padding:1px 4px;color:#c4a8fa;font-weight:700}
+
+/* Tags */
+.tag-lb{display:inline-block;background:var(--lb-tint);color:var(--lb);font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.tag-ub{display:inline-block;background:var(--ub-tint);color:var(--ub);font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+
+/* Simulation */
+.sim-outer{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-lg);overflow:hidden;margin:24px 0}
+.sim-header{background:#0f1117;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.sim-header-title{font-family:var(--mono);font-size:13px;font-weight:600;color:#cdd6f4}
+.sim-body{padding:24px}
+input[type=number]{width:64px;padding:6px 10px;font-size:14px;font-family:var(--mono);border:1px solid var(--rule);border-radius:var(--radius);background:var(--card);color:var(--ink);outline:none;transition:border-color .2s}
+input[type=number]:focus{border-color:var(--lb)}
+.sim-arr{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}
+.s-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
+.s-box{width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:700;border:1.5px solid var(--rule);background:var(--card);color:var(--ink);transition:background .3s,border-color .3s,color .3s,opacity .3s}
+.s-box.active{background:#fef3c7;border-color:var(--mid-hl);color:#92400e}
+.s-box.ans-box{background:var(--ok-tint);border-color:var(--ok);color:var(--ok)}
+.s-box.dead{opacity:.25}
+.s-box.lb-final{background:var(--lb-tint);border-color:var(--lb);color:var(--lb)}
+.s-box.ub-final{background:var(--ub-tint);border-color:var(--ub);color:var(--ub)}
+.s-idx{font-family:var(--mono);font-size:10px;color:var(--ink-4)}
+.ptr-row{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.ptr-cell{width:50px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:36px;justify-content:flex-end}
+.s-ptr{font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px}
+.s-ptr.lo{background:#fee2e2;color:#dc2626}
+.s-ptr.hi{background:#ede9fe;color:#7c3aed}
+.s-ptr.mid{background:#fef3c7;color:#92400e}
+.s-ptr.ans{background:var(--ok-tint);color:var(--ok)}
+
+/* Var display */
+.var-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;font-family:var(--mono);font-size:13px}
+.var-badge{padding:6px 14px;border-radius:8px}
+.var-badge.lo-b{background:#fee2e2}
+.var-badge.hi-b{background:#ede9fe}
+.var-badge.mid-b{background:#fef3c7}
+.var-badge.ans-b{background:var(--ok-tint)}
+
+/* Log & history */
+.sim-log{background:#f8f9fc;border:1px solid var(--rule);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--ink-2);line-height:1.65;min-height:52px;margin-top:14px;font-family:var(--mono)}
+.sim-log .lo-c{color:#dc2626;font-weight:600}
+.sim-log .hi-c{color:#7c3aed;font-weight:600}
+.sim-log .mid-c{color:#d97706;font-weight:600}
+.sim-log .ans-c{color:var(--ok);font-weight:600}
+.sim-log .done{color:var(--ok);font-weight:700}
+.sim-log .cond{color:#0f1117;background:#e8eaf4;padding:1px 5px;border-radius:3px}
+.step-hist{margin-top:14px;border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;max-height:190px;overflow-y:auto}
+.step-hist::-webkit-scrollbar{width:5px}
+.step-hist::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
+.step-hist-hdr{background:#f0f1f6;padding:8px 14px;font-family:var(--mono);font-size:11px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--rule);position:sticky;top:0}
+.step-row{padding:7px 14px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:12px;color:var(--ink-2);display:flex;gap:16px;flex-wrap:wrap}
+.step-row:last-child{border-bottom:none}
+.step-row .sn{color:var(--ink-4)}
+.step-row .act{color:var(--lb)}
+.step-row .act.r{color:var(--ub)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s,color .15s,border-color .15s;border:1px solid transparent;font-family:var(--sans)}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:var(--ink-2)}
+.btn-outline{background:var(--card);border-color:var(--rule);color:var(--ink-2)}
+.btn-outline:hover{border-color:var(--ink-3);color:var(--ink)}
+.btn-lb{background:var(--lb-tint);border-color:var(--lb-mid);color:var(--lb)}
+.btn-lb:hover{background:var(--lb);color:#fff}
+.btn-ub{background:var(--ub-tint);border-color:var(--ub-mid);color:var(--ub)}
+.btn-ub:hover{background:var(--ub);color:#fff}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-done{display:none;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--ok-tint);color:var(--ok);border:1px solid #a7f3d0}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+
+/* Dual sim */
+.dual-sim{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:640px){.dual-sim{grid-template-columns:1fr}}
+.dual-pane{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-lg);overflow:hidden}
+.dual-pane-hdr{padding:12px 18px;border-bottom:1px solid var(--rule)}
+.dual-pane-hdr.lb-h{background:var(--lb-tint)}
+.dual-pane-hdr.ub-h{background:var(--ub-tint)}
+.dual-pane-title{font-family:var(--mono);font-size:13px;font-weight:700}
+.dual-pane-title.lb{color:var(--lb)}.dual-pane-title.ub{color:var(--ub)}
+.dual-body{padding:18px}
+.mini-arr{display:flex;gap:5px;flex-wrap:wrap}
+.m-cell{display:flex;flex-direction:column;align-items:center;gap:2px}
+.m-box{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:700;border:1.5px solid var(--rule);background:var(--card);color:var(--ink);transition:all .3s}
+.m-box.m-active{background:#fef3c7;border-color:var(--mid-hl);color:#92400e}
+.m-box.m-ans{background:var(--ok-tint);border-color:var(--ok);color:var(--ok)}
+.m-box.m-dead{opacity:.22}
+.m-idx{font-family:var(--mono);font-size:10px;color:var(--ink-4)}
+.m-ptr-row{display:flex;gap:5px;margin:4px 0;flex-wrap:wrap}
+.m-ptr-cell{width:40px;min-height:18px;display:flex;justify-content:center}
+.m-ptr{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px}
+.m-ptr.lo{background:#fee2e2;color:#dc2626}
+.m-ptr.hi{background:#ede9fe;color:#7c3aed}
+.m-ptr.mid{background:#fef3c7;color:#92400e}
+.m-ptr.ans{background:var(--ok-tint);color:var(--ok)}
+.mini-log{font-family:var(--mono);font-size:11px;color:var(--ink-2);background:#f8f9fc;border:1px solid var(--rule);border-radius:8px;padding:10px 12px;margin-top:10px;min-height:38px;line-height:1.6}
+
+/* Complexity table */
+.cmx-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.cmx-table th{background:#f0f1f6;font-weight:600;padding:10px 14px;text-align:left;font-family:var(--mono);font-size:12px;color:var(--ink-3);border-bottom:1px solid var(--rule);letter-spacing:.04em}
+.cmx-table td{padding:10px 14px;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+.cmx-table tr:last-child td{border-bottom:none}
+
+/* Footer */
+.page-footer{margin-top:80px;padding:32px 0;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-brand{font-family:var(--mono);font-size:12px;color:var(--ink-4)}
+.footer-note{font-size:12px;color:var(--ink-4)}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow"><span></span>Algorithm Lecture Series</div>
+  <h1>Binary Search<br><em>Bounds</em></h1>
+  <p class="hero-sub">Lower bound and upper bound — two algorithms, one character of difference, and the foundation of half of all competitive programming problems.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">O(log n)</div><div class="stat-label">time complexity</div></div>
+    <div class="stat"><div class="stat-num">O(1)</div><div class="stat-label">space complexity</div></div>
+    <div class="stat"><div class="stat-num">1 char</div><div class="stat-label">difference between them</div></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a class="ch-tab active" href="#concepts">Concepts</a>
+    <a class="ch-tab" href="#pseudocode">Pseudocode</a>
+    <a class="ch-tab" href="#lb-sim">Lower bound sim</a>
+    <a class="ch-tab" href="#ub-sim">Upper bound sim</a>
+    <a class="ch-tab" href="#comparison">Side by side</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════
+     CHAPTER 01 — CONCEPTS
+════════════════════════════════════ -->
+<section class="section" id="concepts">
+  <div class="section-label">Chapter 01</div>
+  <h2 class="section-title">What are bounds?</h2>
+  <p class="section-body">
+    A sorted array can hold duplicate values. Classical binary search finds <em>some</em> occurrence of a target — but often you need to know exactly where a value's range begins and ends. That's what bounds give you.
+  </p>
+
+  <div class="def-grid">
+    <div class="def-block lb">
+      <div class="def-tag lb">LOWER_BOUND</div>
+      <h3>First valid position</h3>
+      <p>The index of the <strong>first element ≥ target</strong>. The leftmost position where you could insert the target and keep the array sorted.</p>
+    </div>
+    <div class="def-block ub">
+      <div class="def-tag ub">UPPER_BOUND</div>
+      <h3>First position past the target</h3>
+      <p>The index of the <strong>first element &gt; target</strong>. One past the last occurrence — the rightmost valid insertion point.</p>
+    </div>
+  </div>
+
+  <div class="insight">
+    <strong>Key relationship:</strong> for any sorted array, <code>upper_bound(x) − lower_bound(x)</code> gives the exact count of occurrences of <code>x</code>. If this equals 0, the element doesn't exist.
+  </div>
+
+  <p class="section-body" style="margin-top:20px">Take the array <code>[1, 3, 5, 5, 5, 8, 9]</code> with target <code>5</code>:</p>
+
+  <div class="concept-arr-wrap">
+    <div class="concept-arr">
+      <div class="c-cell"><div class="c-ann"></div><div class="c-box">1</div><div class="c-idx">0</div></div>
+      <div class="c-cell"><div class="c-ann"></div><div class="c-box">3</div><div class="c-idx">1</div></div>
+      <div class="c-cell"><div class="c-ann"><span class="ann-lb">LB = 2</span></div><div class="c-box lb-mark">5</div><div class="c-idx">2</div></div>
+      <div class="c-cell"><div class="c-ann"></div><div class="c-box target-val">5</div><div class="c-idx">3</div></div>
+      <div class="c-cell"><div class="c-ann"></div><div class="c-box target-val">5</div><div class="c-idx">4</div></div>
+      <div class="c-cell"><div class="c-ann"><span class="ann-ub">UB = 5</span></div><div class="c-box ub-mark">8</div><div class="c-idx">5</div></div>
+      <div class="c-cell"><div class="c-ann"></div><div class="c-box">9</div><div class="c-idx">6</div></div>
+    </div>
+    <p class="arr-caption">
+      <strong>lower_bound(5) = 2</strong> — index of the first 5 &nbsp;·&nbsp;
+      <strong>upper_bound(5) = 5</strong> — index of 8 (first value &gt; 5)<br>
+      Count of 5s = UB − LB = 5 − 2 = <strong>3 ✓</strong>
+    </p>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">When to use each</div>
+    <table class="cmx-table">
+      <thead><tr><th>Task</th><th>Which bound</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Find first occurrence</td><td><span class="tag-lb">lower_bound</span></td><td>Check <code>arr[lb] == target</code></td></tr>
+        <tr><td>Find last occurrence</td><td><span class="tag-ub">upper_bound</span></td><td><code>arr[ub − 1]</code> (if ub &gt; 0)</td></tr>
+        <tr><td>Count occurrences</td><td>Both</td><td><code>ub − lb</code></td></tr>
+        <tr><td>Check existence</td><td><span class="tag-lb">lower_bound</span></td><td><code>lb &lt; n</code> and <code>arr[lb] == target</code></td></tr>
+        <tr><td>Left insertion point</td><td><span class="tag-lb">lower_bound</span></td><td>Returns the index directly</td></tr>
+        <tr><td>Right insertion point</td><td><span class="tag-ub">upper_bound</span></td><td>Returns the index directly</td></tr>
+        <tr><td>Count elements ≥ x</td><td><span class="tag-lb">lower_bound</span></td><td><code>n − lb</code></td></tr>
+        <tr><td>Count elements &gt; x</td><td><span class="tag-ub">upper_bound</span></td><td><code>n − ub</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     CHAPTER 02 — PSEUDOCODE
+════════════════════════════════════ -->
+<section class="section" id="pseudocode">
+  <div class="section-label">Chapter 02</div>
+  <h2 class="section-title">The pseudocode</h2>
+  <p class="section-body">
+    All three algorithms — exact binary search, lower bound, and upper bound — share the same skeleton. The differences are small but have large consequences. Start with exact binary search as the baseline, then see exactly what changes.
+  </p>
+
+  <!-- EXACT BINARY SEARCH -->
+  <div class="pseudo-wrap">
+    <div class="pseudo-header">
+      <span class="pseudo-title" style="color:#a6e3a1">exact_search(arr, target) — the baseline</span>
+      <span class="pseudo-lang">pseudocode</span>
+    </div>
+<pre><span class="kw">function</span> <span class="fn">exact_search</span>(arr, target):
+    <span class="var">lo</span> = 0
+    <span class="var">hi</span> = len(arr) - 1   <span class="cm">// ① hi is the LAST valid index, not one past end</span>
+
+    <span class="kw">while</span> <span class="var">lo</span> &lt;= <span class="var">hi</span>:    <span class="cm">// ② loop condition includes equality (lo == hi is still valid)</span>
+        <span class="var">mid</span> = (lo + hi) // 2
+
+        <span class="kw">if</span> arr[<span class="var">mid</span>] == target:   <span class="cm">// ③ FOUND — return immediately</span>
+            <span class="kw">return</span> <span class="var">mid</span>
+        <span class="kw">elif</span> arr[<span class="var">mid</span>] &lt; target:
+            <span class="var">lo</span> = <span class="var">mid</span> + 1
+        <span class="kw">else</span>:
+            <span class="var">hi</span> = <span class="var">mid</span> - 1   <span class="cm">// ④ hi shrinks by mid-1, not mid</span>
+
+    <span class="kw">return</span> -1            <span class="cm">// ⑤ not found → -1 (no "ans" variable needed)</span></pre>
+  </div>
+
+  <!-- KEY DIFFERENCES CALLOUT -->
+  <div style="background:#0f1117;border:1px solid #2a2d3a;border-radius:var(--r-lg);padding:22px;margin:20px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:#585b70;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Five structural differences — exact search vs bounds</div>
+    <div style="display:grid;gap:10px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start">
+        <div style="width:24px;height:24px;border-radius:50%;background:#a6e3a1;color:#0f1117;font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">①</div>
+        <div style="font-family:var(--mono);font-size:13px;color:#cdd6f4;line-height:1.7"><span style="color:#f38ba8">hi = len(arr) - 1</span> in exact search &nbsp;vs&nbsp; <span style="color:#89b4fa">hi = len(arr)</span> in bounds. Bounds use a half-open interval <span style="color:#cba6f7">[lo, hi)</span> so <code style="background:#1e2030;padding:1px 5px;border-radius:3px">hi</code> can represent "one past the last element" as a valid answer (meaning: not found, or insert at end).</div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start">
+        <div style="width:24px;height:24px;border-radius:50%;background:#a6e3a1;color:#0f1117;font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">②</div>
+        <div style="font-family:var(--mono);font-size:13px;color:#cdd6f4;line-height:1.7"><span style="color:#f38ba8">while lo &lt;= hi</span> in exact search &nbsp;vs&nbsp; <span style="color:#89b4fa">while lo &lt; hi</span> in bounds. Because bounds use an exclusive <code style="background:#1e2030;padding:1px 5px;border-radius:3px">hi</code>, the interval is empty when <code style="background:#1e2030;padding:1px 5px;border-radius:3px">lo == hi</code>, so the loop exits there.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start">
+        <div style="width:24px;height:24px;border-radius:50%;background:#a6e3a1;color:#0f1117;font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">③</div>
+        <div style="font-family:var(--mono);font-size:13px;color:#cdd6f4;line-height:1.7"><span style="color:#f38ba8">return mid immediately on ==</span> in exact search &nbsp;vs&nbsp; <span style="color:#89b4fa">no early return in bounds</span>. Bounds never stop on a match — they record <code style="background:#1e2030;padding:1px 5px;border-radius:3px">ans = mid</code> and keep narrowing to find the <em>first</em> or <em>last</em> occurrence.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start">
+        <div style="width:24px;height:24px;border-radius:50%;background:#a6e3a1;color:#0f1117;font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">④</div>
+        <div style="font-family:var(--mono);font-size:13px;color:#cdd6f4;line-height:1.7"><span style="color:#f38ba8">hi = mid - 1</span> in exact search &nbsp;vs&nbsp; <span style="color:#89b4fa">hi = mid</span> in bounds. In bounds, when mid is a valid candidate we set <code style="background:#1e2030;padding:1px 5px;border-radius:3px">hi = mid</code> (not mid-1) to preserve mid in the search window — otherwise we could skip the answer.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start">
+        <div style="width:24px;height:24px;border-radius:50%;background:#a6e3a1;color:#0f1117;font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">⑤</div>
+        <div style="font-family:var(--mono);font-size:13px;color:#cdd6f4;line-height:1.7"><span style="color:#f38ba8">returns -1 on miss</span> in exact search &nbsp;vs&nbsp; <span style="color:#89b4fa">returns len(arr) on miss</span> in bounds. A bound result is always a valid insertion index; -1 would be meaningless as a position.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOWER BOUND -->
+  <div class="pseudo-wrap" style="margin-top:20px">
+    <div class="pseudo-header">
+      <span class="pseudo-title">lower_bound(arr, target)</span>
+      <span class="pseudo-lang">pseudocode</span>
+    </div>
+<pre><span class="kw">function</span> <span class="fn">lower_bound</span>(arr, target):
+    <span class="var">lo</span>  = 0
+    <span class="var">hi</span>  = len(arr)     <span class="cm">// ① one past end (not len-1)</span>
+    <span class="var">ans</span> = <span class="var">hi</span>           <span class="cm">// ⑤ default answer: not found</span>
+
+    <span class="kw">while</span> <span class="var">lo</span> &lt; <span class="var">hi</span>:    <span class="cm">// ② strict less-than (not <=)</span>
+        <span class="var">mid</span> = (lo + hi) // 2
+
+        <span class="kw">if</span> arr[<span class="var">mid</span>] <span class="key">&lt;</span> target:    <span class="cm">// two branches only — no == branch  ③</span>
+            <span class="var">lo</span> = <span class="var">mid</span> + 1
+        <span class="kw">else</span>:                     <span class="cm">// arr[mid] >= target: candidate found</span>
+            <span class="var">ans</span> = <span class="var">mid</span>            <span class="cm">// ③ record but do NOT return yet</span>
+            <span class="var">hi</span>  = <span class="var">mid</span>            <span class="cm">// ④ hi = mid, not mid-1</span>
+
+    <span class="kw">return</span> <span class="var">ans</span>           <span class="cm">// first index where arr[i] >= target</span></pre>
+  </div>
+
+  <!-- UPPER BOUND -->
+  <div class="pseudo-wrap" style="margin-top:14px">
+    <div class="pseudo-header">
+      <span class="pseudo-title" style="color:#c4a8fa">upper_bound(arr, target)</span>
+      <span class="pseudo-lang">pseudocode</span>
+    </div>
+<pre><span class="kw">function</span> <span class="fn">upper_bound</span>(arr, target):
+    <span class="var">lo</span>  = 0
+    <span class="var">hi</span>  = len(arr)     <span class="cm">// ① one past end</span>
+    <span class="var">ans</span> = <span class="var">hi</span>
+
+    <span class="kw">while</span> <span class="var">lo</span> &lt; <span class="var">hi</span>:    <span class="cm">// ② strict less-than</span>
+        <span class="var">mid</span> = (lo + hi) // 2
+
+        <span class="kw">if</span> arr[<span class="var">mid</span>] <span class="key">&lt;=</span> target:   <span class="cm">// only change vs lower_bound: <= instead of <</span>
+            <span class="var">lo</span> = <span class="var">mid</span> + 1         <span class="cm">// equal values are also discarded — push right</span>
+        <span class="kw">else</span>:                     <span class="cm">// arr[mid] > target: candidate found</span>
+            <span class="var">ans</span> = <span class="var">mid</span>            <span class="cm">// ③ record but do NOT return</span>
+            <span class="var">hi</span>  = <span class="var">mid</span>            <span class="cm">// ④ hi = mid, not mid-1</span>
+
+    <span class="kw">return</span> <span class="var">ans</span>           <span class="cm">// first index where arr[i] > target</span></pre>
+  </div>
+
+  <!-- SUMMARY COMPARISON TABLE -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">At a glance — all three side by side</div>
+    <div style="overflow-x:auto">
+    <table class="cmx-table" style="min-width:560px">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th style="color:#a6e3a1">exact_search</th>
+          <th style="color:#93b8fa">lower_bound</th>
+          <th style="color:#c4a8fa">upper_bound</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>hi</code> initialised to</td>
+          <td><code>len(arr) - 1</code></td>
+          <td><code>len(arr)</code></td>
+          <td><code>len(arr)</code></td>
+        </tr>
+        <tr>
+          <td>Loop condition</td>
+          <td><code>lo &lt;= hi</code></td>
+          <td><code>lo &lt; hi</code></td>
+          <td><code>lo &lt; hi</code></td>
+        </tr>
+        <tr>
+          <td>On <code>arr[mid] == target</code></td>
+          <td>Return <code>mid</code> immediately</td>
+          <td>Save as candidate, search left</td>
+          <td>Discard, search right</td>
+        </tr>
+        <tr>
+          <td>Condition to move right</td>
+          <td><code>arr[mid] &lt; target</code></td>
+          <td><code>arr[mid] &lt; target</code></td>
+          <td><code>arr[mid] &lt;= target</code></td>
+        </tr>
+        <tr>
+          <td>Narrowing right boundary</td>
+          <td><code>hi = mid - 1</code></td>
+          <td><code>hi = mid</code></td>
+          <td><code>hi = mid</code></td>
+        </tr>
+        <tr>
+          <td>Uses <code>ans</code> variable?</td>
+          <td>No</td>
+          <td>Yes</td>
+          <td>Yes</td>
+        </tr>
+        <tr>
+          <td>Return on miss</td>
+          <td><code>-1</code></td>
+          <td><code>len(arr)</code></td>
+          <td><code>len(arr)</code></td>
+        </tr>
+        <tr>
+          <td>Works correctly with duplicates?</td>
+          <td>Finds <em>any</em> match (unpredictable)</td>
+          <td>Always finds <em>first</em></td>
+          <td>Always finds position <em>past last</em></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="insight">
+    <strong>Why bounds use <code>hi = mid</code> instead of <code>hi = mid - 1</code>:</strong> when a bound finds a candidate at <code>mid</code>, it can't discard <code>mid</code> the way exact search does. It must preserve it — just narrow the window so it can check whether something earlier (or later) is also valid. Setting <code>hi = mid - 1</code> would skip the answer entirely.
+  </div>
+
+  <!-- C++ STL one-liner technique -->
+  <h3 style="font-size:17px;font-weight:600;margin:36px 0 12px;color:var(--ink)">C++ STL — using the standard library</h3>
+  <p class="section-body" style="margin-bottom:20px">
+    In practice you never write the loop yourself. The C++ standard library ships both functions in <code>&lt;algorithm&gt;</code>. They return an <strong>iterator</strong> — dereference it with <code>*</code> to get the value, or subtract <code>v.begin()</code> to get the index.
+  </p>
+
+  <!-- lower_bound STL -->
+  <div class="pseudo-wrap">
+    <div class="pseudo-header">
+      <span class="pseudo-title">std::lower_bound — C++ STL</span>
+      <span class="pseudo-lang">c++</span>
+    </div>
+<pre><span class="pp">#include</span> <span class="good">&lt;algorithm&gt;</span>
+<span class="pp">#include</span> <span class="good">&lt;iostream&gt;</span>
+<span class="pp">#include</span> <span class="good">&lt;vector&gt;</span>
+<span class="kw">using namespace</span> std;
+
+<span class="ty">int</span> <span class="fn">main</span>()
+{
+    <span class="cm">// Sorted vector</span>
+    vector&lt;<span class="ty">int</span>&gt; v = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};
+
+    <span class="cm">// Finding lower bound of 30</span>
+    cout &lt;&lt; *lower_bound(v.begin(), v.end(), <span class="num">30</span>);
+    <span class="cm">// Output: 30  (iterator points to first element >= 30)</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <!-- upper_bound STL -->
+  <div class="pseudo-wrap" style="margin-top:14px">
+    <div class="pseudo-header">
+      <span class="pseudo-title" style="color:#c4a8fa">std::upper_bound — C++ STL</span>
+      <span class="pseudo-lang">c++</span>
+    </div>
+<pre><span class="cm">// C++ Program to illustrate use of std::upper_bound() for vector</span>
+<span class="pp">#include</span> <span class="good">&lt;algorithm&gt;</span>
+<span class="pp">#include</span> <span class="good">&lt;iostream&gt;</span>
+<span class="pp">#include</span> <span class="good">&lt;vector&gt;</span>
+<span class="kw">using namespace</span> std;
+
+<span class="ty">int</span> <span class="fn">main</span>()
+{
+    <span class="cm">// Sorted vector</span>
+    vector&lt;<span class="ty">int</span>&gt; v = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};
+
+    <span class="cm">// Finding upper bound of 30</span>
+    cout &lt;&lt; *upper_bound(v.begin(), v.end(), <span class="num">30</span>);
+    <span class="cm">// Output: 40  (iterator points to first element > 30)</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <!-- Key notes on STL -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">What the outputs mean</div>
+    <table class="cmx-table">
+      <thead><tr><th>Call</th><th>Iterator points to</th><th>Dereferenced value</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>lower_bound(v.begin(), v.end(), 30)</code></td>
+          <td>First element <strong>≥ 30</strong> → index 2</td>
+          <td><code>*it = 30</code></td>
+        </tr>
+        <tr>
+          <td><code>upper_bound(v.begin(), v.end(), 30)</code></td>
+          <td>First element <strong>&gt; 30</strong> → index 3</td>
+          <td><code>*it = 40</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px;color:var(--ink-3);margin-top:14px;line-height:1.65">
+      To get the <strong>index</strong> instead of the value: <code>lower_bound(v.begin(), v.end(), 30) - v.begin()</code> → returns <code>2</code>.
+    </p>
+  </div>
+
+  <!-- Further reading link -->
+  <div style="margin-top:20px;padding:16px 20px;background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div style="width:36px;height:36px;border-radius:8px;background:#2f8d46;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px">Further reading — GeeksForGeeks</div>
+      <a href="https://www.geeksforgeeks.org/cpp/upper_bound-and-lower_bound-for-vector-in-cpp-stl/" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:12px;color:var(--lb);text-decoration:none;word-break:break-all">
+        upper_bound and lower_bound for vector in C++ STL →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     CHAPTER 03 — LOWER BOUND SIM
+════════════════════════════════════ -->
+<section class="section" id="lb-sim">
+  <div class="section-label">Chapter 03</div>
+  <h2 class="section-title">Lower bound — step-by-step simulation</h2>
+  <p class="section-body">
+    Watch the algorithm shrink its search window one iteration at a time. <span style="color:#d97706;font-weight:600">Amber</span> = current <code>mid</code>. <span style="color:#dc2626;font-weight:600">Red lo</span> and <span style="color:#7c3aed;font-weight:600">purple hi</span> mark the active window. <span style="color:var(--ok);font-weight:600">Green ans</span> is the best candidate found so far. Dimmed cells are outside the search window.
+  </p>
+
+  <div class="sim-outer">
+    <div class="sim-header">
+      <span class="sim-header-title">lower_bound — array [1, 3, 5, 5, 5, 8, 9]</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-family:var(--mono);font-size:12px;color:#585b70">target =</span>
+        <input type="number" id="lb-tgt" value="5" min="1" max="9" style="width:54px;background:#1e2030;border-color:#2a2d3a;color:#cdd6f4">
+        <button class="btn btn-outline btn-sm" onclick="lbReset()" style="background:#1e2030;border-color:#2a2d3a;color:#cdd6f4">↺ Reset</button>
+      </div>
+    </div>
+    <div class="sim-body">
+      <div class="sim-arr" id="lb-arr"></div>
+      <div class="ptr-row" id="lb-ptrs"></div>
+      <div class="var-row">
+        <div class="var-badge lo-b">lo = <strong id="lb-lo">0</strong></div>
+        <div class="var-badge hi-b">hi = <strong id="lb-hi">7</strong></div>
+        <div class="var-badge mid-b">mid = <strong id="lb-mid">—</strong></div>
+        <div class="var-badge ans-b">ans = <strong id="lb-ans">—</strong></div>
+      </div>
+      <div class="sim-log" id="lb-log">Press <span style="color:var(--lb);font-weight:600">Step →</span> to begin.</div>
+      <div class="btn-row">
+        <button class="btn btn-lb" onclick="lbStep()" id="lb-sbtn">Step →</button>
+        <button class="btn btn-outline" onclick="lbAuto()" id="lb-abtn">▶ Auto</button>
+        <button class="btn btn-outline btn-sm" onclick="lbReset()">↺ Reset</button>
+        <span class="btn-done" id="lb-done">✓ Finished</span>
+      </div>
+      <div class="step-hist" id="lb-hist" style="display:none">
+        <div class="step-hist-hdr">Iteration log</div>
+        <div id="lb-hist-rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">Reading the condition</div>
+    <p style="font-size:14px;color:var(--ink-2);line-height:1.75">
+      When <code>arr[mid] &lt; target</code> is <strong>true</strong>: mid is definitively too small. Every element at or before mid is also too small. We set <code>lo = mid + 1</code>, discarding the entire left half including mid.<br><br>
+      When <code>arr[mid] &lt; target</code> is <strong>false</strong> (i.e., <code>arr[mid] &ge; target</code>): mid is a valid candidate. We record it in <code>ans</code> and set <code>hi = mid</code> to search leftward — there may be an earlier occurrence.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     CHAPTER 04 — UPPER BOUND SIM
+════════════════════════════════════ -->
+<section class="section" id="ub-sim">
+  <div class="section-label">Chapter 04</div>
+  <h2 class="section-title">Upper bound — step-by-step simulation</h2>
+  <p class="section-body">
+    Same controls, same array. Watch how the single condition change (<code>&lt;=</code> instead of <code>&lt;</code>) causes the algorithm to push past equal elements and land one position to the right of all matching values.
+  </p>
+
+  <div class="sim-outer">
+    <div class="sim-header">
+      <span class="sim-header-title">upper_bound — array [1, 3, 5, 5, 5, 8, 9]</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-family:var(--mono);font-size:12px;color:#585b70">target =</span>
+        <input type="number" id="ub-tgt" value="5" min="1" max="9" style="width:54px;background:#1e2030;border-color:#2a2d3a;color:#cdd6f4">
+        <button class="btn btn-outline btn-sm" onclick="ubReset()" style="background:#1e2030;border-color:#2a2d3a;color:#cdd6f4">↺ Reset</button>
+      </div>
+    </div>
+    <div class="sim-body">
+      <div class="sim-arr" id="ub-arr"></div>
+      <div class="ptr-row" id="ub-ptrs"></div>
+      <div class="var-row">
+        <div class="var-badge lo-b">lo = <strong id="ub-lo">0</strong></div>
+        <div class="var-badge hi-b">hi = <strong id="ub-hi">7</strong></div>
+        <div class="var-badge mid-b">mid = <strong id="ub-mid">—</strong></div>
+        <div class="var-badge ans-b">ans = <strong id="ub-ans">—</strong></div>
+      </div>
+      <div class="sim-log" id="ub-log">Press <span style="color:var(--ub);font-weight:600">Step →</span> to begin.</div>
+      <div class="btn-row">
+        <button class="btn btn-ub" onclick="ubStep()" id="ub-sbtn">Step →</button>
+        <button class="btn btn-outline" onclick="ubAuto()" id="ub-abtn">▶ Auto</button>
+        <button class="btn btn-outline btn-sm" onclick="ubReset()">↺ Reset</button>
+        <span class="btn-done" id="ub-done">✓ Finished</span>
+      </div>
+      <div class="step-hist" id="ub-hist" style="display:none">
+        <div class="step-hist-hdr">Iteration log</div>
+        <div id="ub-hist-rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">Reading the condition</div>
+    <p style="font-size:14px;color:var(--ink-2);line-height:1.75">
+      When <code>arr[mid] &lt;= target</code> is <strong>true</strong>: mid is at or below the target. Even if <code>arr[mid] == target</code>, we don't stop — we need the first position strictly <em>after</em> all equal values. We set <code>lo = mid + 1</code>.<br><br>
+      When <code>arr[mid] &lt;= target</code> is <strong>false</strong> (i.e., <code>arr[mid] &gt; target</code>): mid is a valid candidate for the upper bound. We record it and search left for an even earlier one.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     CHAPTER 05 — SIDE BY SIDE
+════════════════════════════════════ -->
+<section class="section" id="comparison">
+  <div class="section-label">Chapter 05</div>
+  <h2 class="section-title">Both algorithms, side by side</h2>
+  <p class="section-body">
+    Both algorithms run on the same array simultaneously. Each iteration is shown for both — with a clear explanation of the decision made at that step and a divergence flag when their behaviour differs.
+  </p>
+
+  <!-- Array legend + target picker -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Array &amp; target</div>
+    <p style="font-size:13px;color:var(--ink-3);margin-bottom:14px;line-height:1.6">
+      Array: <code>[2, 5, 8, 8, 8, 12, 16, 23, 23, 38, 56, 72]</code> — 12 elements, multiple duplicate groups. Choose a target and see exactly where the two algorithms diverge.
+    </p>
+    <!-- static visual of array -->
+    <div id="dual-static-arr" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--ink-3);font-weight:500">Target:</span>
+      <select id="dual-tgt" style="padding:6px 12px;border:1px solid var(--rule);border-radius:var(--radius);font-size:14px;font-family:var(--mono);background:var(--card);color:var(--ink);cursor:pointer">
+        <option value="8">8  — three duplicates (most interesting)</option>
+        <option value="23">23 — two duplicates near end</option>
+        <option value="12">12 — single occurrence, middle</option>
+        <option value="1">1  — smaller than all (not found)</option>
+        <option value="100">100 — larger than all (not found)</option>
+        <option value="10">10 — between elements (not found)</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="dualRun()">▶ Start</button>
+      <button class="btn btn-outline btn-sm" onclick="dualReset()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- Iteration counter + divergence badge -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="font-family:var(--mono);font-size:13px;color:var(--ink-3)">
+      Iteration: <strong id="dual-iter-count" style="color:var(--ink)">—</strong>
+    </div>
+    <div id="dual-diverge-badge" style="display:none;padding:4px 12px;border-radius:20px;background:#fff3cd;border:1px solid #ffc107;font-size:12px;font-weight:600;color:#856404">
+      ⚡ Algorithms diverged here!
+    </div>
+    <span class="btn-done" id="dual-done" style="margin-left:auto">✓ Both finished</span>
+  </div>
+
+  <!-- Two panes stacked per iteration -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+    <!-- LB pane -->
+    <div style="background:var(--card);border:1px solid var(--lb-mid);border-radius:var(--r-lg);overflow:hidden">
+      <div style="background:var(--lb-tint);padding:12px 18px;border-bottom:1px solid var(--lb-mid);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--lb)">lower_bound</span>
+        <code style="font-size:11px;color:var(--lb);background:rgba(37,99,235,.1);padding:2px 7px;border-radius:4px">arr[mid] &lt; target</code>
+      </div>
+      <div style="padding:16px 18px">
+        <div id="dual-lb-arr" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <div id="dual-lb-ptrs" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px"></div>
+        <!-- var badges -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;margin-bottom:12px">
+          <div style="padding:4px 10px;border-radius:6px;background:#fee2e2">lo=<strong id="dlb-lo" style="color:#dc2626">0</strong></div>
+          <div style="padding:4px 10px;border-radius:6px;background:#ede9fe">hi=<strong id="dlb-hi" style="color:#7c3aed">12</strong></div>
+          <div style="padding:4px 10px;border-radius:6px;background:#fef3c7">mid=<strong id="dlb-mid" style="color:#92400e">—</strong></div>
+          <div style="padding:4px 10px;border-radius:6px;background:var(--ok-tint)">ans=<strong id="dlb-ans" style="color:var(--ok)">—</strong></div>
+        </div>
+        <!-- decision box -->
+        <div id="dual-lb-decision" style="background:#f8f9fc;border:1px solid var(--rule);border-radius:8px;padding:11px 14px;font-size:12px;font-family:var(--mono);color:var(--ink-2);line-height:1.7;min-height:48px">Waiting to start…</div>
+      </div>
+    </div>
+
+    <!-- UB pane -->
+    <div style="background:var(--card);border:1px solid var(--ub-mid);border-radius:var(--r-lg);overflow:hidden">
+      <div style="background:var(--ub-tint);padding:12px 18px;border-bottom:1px solid var(--ub-mid);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ub)">upper_bound</span>
+        <code style="font-size:11px;color:var(--ub);background:rgba(124,58,237,.1);padding:2px 7px;border-radius:4px">arr[mid] &lt;= target</code>
+      </div>
+      <div style="padding:16px 18px">
+        <div id="dual-ub-arr" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <div id="dual-ub-ptrs" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;margin-bottom:12px">
+          <div style="padding:4px 10px;border-radius:6px;background:#fee2e2">lo=<strong id="dub-lo" style="color:#dc2626">0</strong></div>
+          <div style="padding:4px 10px;border-radius:6px;background:#ede9fe">hi=<strong id="dub-hi" style="color:#7c3aed">12</strong></div>
+          <div style="padding:4px 10px;border-radius:6px;background:#fef3c7">mid=<strong id="dub-mid" style="color:#92400e">—</strong></div>
+          <div style="padding:4px 10px;border-radius:6px;background:var(--ok-tint)">ans=<strong id="dub-ans" style="color:var(--ok)">—</strong></div>
+        </div>
+        <div id="dual-ub-decision" style="background:#f8f9fc;border:1px solid var(--rule);border-radius:8px;padding:11px 14px;font-size:12px;font-family:var(--mono);color:var(--ink-2);line-height:1.7;min-height:48px">Waiting to start…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-primary" onclick="dualStep()" id="dual-step-btn">Step both →</button>
+    <button class="btn btn-outline" onclick="dualAuto()" id="dual-abtn">▶ Auto</button>
+  </div>
+
+  <!-- Shared iteration log -->
+  <div style="margin-top:20px">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Full iteration log</div>
+    <div id="dual-full-log" style="border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;max-height:260px;overflow-y:auto">
+      <div style="padding:14px 16px;font-size:13px;color:var(--ink-4);font-family:var(--mono)">Log will appear here as you step through…</div>
+    </div>
+  </div>
+
+  <!-- Result summary -->
+  <div id="dual-result-card" style="display:none;margin-top:20px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:24px">
+    <div class="card-title">Result interpretation</div>
+    <div id="dual-result-body" style="font-size:14px;color:var(--ink-2);line-height:1.8"></div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">Complexity summary</div>
+    <table class="cmx-table">
+      <thead><tr><th>Property</th><th>lower_bound</th><th>upper_bound</th></tr></thead>
+      <tbody>
+        <tr><td>Time</td><td><code>O(log n)</code></td><td><code>O(log n)</code></td></tr>
+        <tr><td>Space</td><td><code>O(1)</code></td><td><code>O(1)</code></td></tr>
+        <tr><td>Max iterations</td><td><code>⌈log₂ n⌉</code></td><td><code>⌈log₂ n⌉</code></td></tr>
+        <tr><td>Precondition</td><td colspan="2">Array sorted in non-decreasing order</td></tr>
+        <tr><td>Return when not found</td><td><code>n</code> (len of array)</td><td><code>n</code> (len of array)</td></tr>
+        <tr><td>Result for target=8 on this array</td><td><code>1</code> (first 8)</td><td><code>4</code> (first element &gt; 8, which is 12)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="page-footer">
+  <div class="footer-brand">Binary Search — Upper &amp; Lower Bound</div>
+  <div class="footer-note">Side-by-side array: [2, 5, 8, 8, 8, 12, 16, 23, 23, 38, 56, 72] &nbsp;·&nbsp; All simulations run live in the browser</div>
+</footer>
+</div>
+
+<script>
+const ARR=[1,3,5,5,5,8,9],N=ARR.length;
+
+/* ── Scroll-spy ── */
+const secs=document.querySelectorAll('section[id]'),tabs=document.querySelectorAll('.ch-tab');
+new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){tabs.forEach(t=>t.classList.remove('active'));const m=document.querySelector(`.ch-tab[href="#${e.target.id}"]`);if(m)m.classList.add('active')}})},{rootMargin:'-30% 0px -60% 0px'}).observe&&secs.forEach(s=>new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){tabs.forEach(t=>t.classList.remove('active'));const m=document.querySelector(`.ch-tab[href="#${e.target.id}"]`);if(m)m.classList.add('active')}})},{rootMargin:'-30% 0px -60% 0px'}).observe(s));
+
+/* ── Stepper factory ── */
+function makeStepper(pfx,mode){
+  let lo,hi,ans,done,hist,timer,sc;
+  const tgt=()=>parseInt(document.getElementById(pfx+'-tgt').value)||5;
+
+  function renderArr(mid){
+    const aEl=document.getElementById(pfx+'-arr'),pEl=document.getElementById(pfx+'-ptrs');
+    aEl.innerHTML='';pEl.innerHTML='';
+    ARR.forEach((v,i)=>{
+      const cell=document.createElement('div');cell.className='s-cell';
+      const box=document.createElement('div');
+      let c='s-box';
+      if(i===mid)c+=' active';
+      else if(i===ans&&ans<N&&!done)c+=' ans-box';
+      if(!done&&(i<lo||i>=hi)&&i!==mid)c+=' dead';
+      if(done&&i===ans&&ans<N)c+=(mode==='lb')?' lb-final':' ub-final';
+      box.className=c;box.textContent=v;
+      const idx=document.createElement('div');idx.className='s-idx';idx.textContent=i;
+      cell.append(box,idx);aEl.appendChild(cell);
+    });
+    const ex=ARR.map(()=>[]);
+    if(lo<N)ex[lo].push('<span class="s-ptr lo">lo</span>');
+    if(hi<=N-1)ex[hi].push('<span class="s-ptr hi">hi</span>');
+    if(mid>=0&&mid<N)ex[mid].push('<span class="s-ptr mid">mid</span>');
+    if(ans<N)ex[ans].push('<span class="s-ptr ans">ans</span>');
+    ARR.forEach((_,i)=>{const pc=document.createElement('div');pc.className='ptr-cell';pc.innerHTML=ex[i].join('');pEl.appendChild(pc);});
+    document.getElementById(pfx+'-lo').textContent=lo;
+    document.getElementById(pfx+'-hi').textContent=hi;
+    document.getElementById(pfx+'-mid').textContent=mid>=0?mid:'—';
+    document.getElementById(pfx+'-ans').textContent=ans<N?ans:'—';
+  }
+
+  function reset(){
+    lo=0;hi=N;ans=N;done=false;hist=[];sc=0;
+    if(timer){clearInterval(timer);timer=null;}
+    document.getElementById(pfx+'-done').style.display='none';
+    document.getElementById(pfx+'-hist').style.display='none';
+    document.getElementById(pfx+'-hist-rows').innerHTML='';
+    document.getElementById(pfx+'-sbtn').disabled=false;
+    document.getElementById(pfx+'-abtn').textContent='▶ Auto';
+    renderArr(-1);
+    document.getElementById(pfx+'-log').innerHTML=
+      `Press <span style="color:var(--${mode==='lb'?'lb':'ub'});font-weight:600">Step →</span> to begin.`;
+  }
+
+  function step(){
+    if(done)return;
+    const t=tgt();
+    if(lo>=hi){
+      done=true;
+      if(timer){clearInterval(timer);timer=null;document.getElementById(pfx+'-abtn').textContent='▶ Auto';}
+      document.getElementById(pfx+'-done').style.display='inline-block';
+      document.getElementById(pfx+'-sbtn').disabled=true;
+      renderArr(-1);
+      const foundMsg=ans<N&&ARR[ans]===t
+        ?`<span class="done">Answer: index ${ans} → arr[${ans}] = ${ARR[ans]}</span>`
+        :`<span class="done">Answer: index ${ans<N?ans:N} — target not in array</span>`;
+      document.getElementById(pfx+'-log').innerHTML=foundMsg;
+      return;
+    }
+    const mid=Math.floor((lo+hi)/2),v=ARR[mid];
+    const cond=mode==='lb'?v<t:v<=t;
+    sc++;
+    let msg;
+    if(cond){
+      msg=`<span class="sn">#${sc}</span> &nbsp;<span class="mid-c">mid=${mid}</span>, <span class="cond">arr[${mid}]=${v} ${mode==='lb'?'&lt;':'≤'} ${t}</span> → TRUE → <span class="lo-c">lo = ${mid+1}</span>`;
+      renderArr(mid);
+      document.getElementById(pfx+'-log').innerHTML=msg;
+      lo=mid+1;
+    }else{
+      ans=mid;
+      msg=`<span class="sn">#${sc}</span> &nbsp;<span class="mid-c">mid=${mid}</span>, <span class="cond">arr[${mid}]=${v} ${mode==='lb'?'≥':'&gt;'} ${t}</span> → FALSE → <span class="ans-c">ans=${mid}</span>, <span class="hi-c">hi=${mid}</span>`;
+      renderArr(mid);
+      document.getElementById(pfx+'-log').innerHTML=msg;
+      hi=mid;
+    }
+    hist.push({n:sc,lo,hi,mid,v,cond});
+    const hEl=document.getElementById(pfx+'-hist');hEl.style.display='block';
+    const rEl=document.createElement('div');rEl.className='step-row';
+    rEl.innerHTML=`<span class="sn">iter ${sc}</span><span>lo=${cond?lo-1:lo} hi=${cond?hi:hi+1}</span><span class="mid-c">mid=${mid} (val=${v})</span><span class="${cond?'act':'act r'}">${cond?'→ lo='+(mid+1):'→ ans='+ans+' hi='+mid}</span>`;
+    document.getElementById(pfx+'-hist-rows').appendChild(rEl);
+    hEl.scrollTop=hEl.scrollHeight;
+  }
+
+  function auto(){
+    if(timer){clearInterval(timer);timer=null;document.getElementById(pfx+'-abtn').textContent='▶ Auto';return;}
+    document.getElementById(pfx+'-abtn').textContent='⏸ Pause';
+    timer=setInterval(()=>{if(done){clearInterval(timer);timer=null;document.getElementById(pfx+'-abtn').textContent='▶ Auto';return;}step();},900);
+  }
+  reset();
+  return{reset,step,auto};
+}
+
+const lb=makeStepper('lb','lb'),ub=makeStepper('ub','ub');
+function lbReset(){lb.reset()}function lbStep(){lb.step()}function lbAuto(){lb.auto()}
+function ubReset(){ub.reset()}function ubStep(){ub.step()}function ubAuto(){ub.auto()}
+
+/* ════════════════════════════════════════
+   DUAL SIMULATION — bigger array
+════════════════════════════════════════ */
+const DARR=[2,5,8,8,8,12,16,23,23,38,56,72],DN=DARR.length;
+let dState={},dTimer,dIterCount=0,dDiverged=false,dDivergeIter=-1;
+
+/* build static array legend */
+function buildStaticArr(){
+  const el=document.getElementById('dual-static-arr');
+  if(!el)return;
+  el.innerHTML='';
+  DARR.forEach((v,i)=>{
+    const cell=document.createElement('div');
+    cell.style.cssText='display:flex;flex-direction:column;align-items:center;gap:3px';
+    const box=document.createElement('div');
+    box.style.cssText='width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;border:1.5px solid var(--rule);background:var(--card);color:var(--ink)';
+    box.textContent=v;
+    const idx=document.createElement('div');
+    idx.style.cssText='font-family:var(--mono);font-size:10px;color:var(--ink-4)';
+    idx.textContent=i;
+    cell.append(box,idx);el.appendChild(cell);
+  });
+}
+
+function renderDualPane(mode,mid){
+  const s=dState[mode];
+  if(!s)return;
+  const t=getDualTgt();
+  const pfx=mode==='lb'?'dlb':'dub';
+  const aEl=document.getElementById('dual-'+mode+'-arr');
+  const pEl=document.getElementById('dual-'+mode+'-ptrs');
+  aEl.innerHTML='';pEl.innerHTML='';
+
+  DARR.forEach((v,i)=>{
+    const cell=document.createElement('div');
+    cell.style.cssText='display:flex;flex-direction:column;align-items:center;gap:2px';
+    const box=document.createElement('div');
+    let bg='var(--card)',bc='var(--rule)',tc='var(--ink)',op='1';
+    if(i===mid){bg='#fef3c7';bc='#f59e0b';tc='#92400e';}
+    else if(i===s.ans&&s.ans<DN&&!s.done){bg='var(--ok-tint)';bc='var(--ok)';tc='var(--ok)';}
+    if(!s.done&&(i<s.lo||i>=s.hi)&&i!==mid)op='0.22';
+    if(s.done&&i===s.ans&&s.ans<DN){
+      bg=mode==='lb'?'var(--lb-tint)':'var(--ub-tint)';
+      bc=mode==='lb'?'var(--lb)':'var(--ub)';
+      tc=mode==='lb'?'var(--lb)':'var(--ub)';
+    }
+    /* highlight target-equal cells */
+    if(v===t&&i!==mid&&!(i===s.ans&&s.ans<DN)){bg='#f0fdf4';bc='#86efac';}
+    box.style.cssText=`width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;border:1.5px solid ${bc};background:${bg};color:${tc};opacity:${op};transition:all .3s`;
+    box.textContent=v;
+    const idx=document.createElement('div');
+    idx.style.cssText='font-family:var(--mono);font-size:10px;color:var(--ink-4)';
+    idx.textContent=i;
+    cell.append(box,idx);aEl.appendChild(cell);
+  });
+
+  /* pointer row */
+  const ex=DARR.map(()=>[]);
+  if(s.lo<DN)ex[s.lo].push(`<span class="m-ptr lo">lo</span>`);
+  if(s.hi<=DN-1)ex[s.hi].push(`<span class="m-ptr hi">hi</span>`);
+  if(mid>=0&&mid<DN)ex[mid].push(`<span class="m-ptr mid">mid</span>`);
+  if(s.ans<DN)ex[s.ans].push(`<span class="m-ptr ans">ans</span>`);
+  DARR.forEach((_,i)=>{
+    const pc=document.createElement('div');pc.className='m-ptr-cell';
+    pc.innerHTML=ex[i].join('');pEl.appendChild(pc);
+  });
+
+  /* var badges */
+  document.getElementById(pfx+'-lo').textContent=s.lo;
+  document.getElementById(pfx+'-hi').textContent=s.hi;
+  document.getElementById(pfx+'-mid').textContent=mid>=0?mid:'—';
+  document.getElementById(pfx+'-ans').textContent=s.ans<DN?s.ans:'—';
+}
+
+function getDualTgt(){return parseInt(document.getElementById('dual-tgt').value)||8;}
+
+function dualReset(){
+  if(dTimer){clearInterval(dTimer);dTimer=null;}
+  dIterCount=0;dDiverged=false;dDivergeIter=-1;
+  dState={lb:{lo:0,hi:DN,ans:DN,done:false},ub:{lo:0,hi:DN,ans:DN,done:false}};
+  document.getElementById('dual-done').style.display='none';
+  document.getElementById('dual-diverge-badge').style.display='none';
+  document.getElementById('dual-iter-count').textContent='—';
+  document.getElementById('dual-abtn').textContent='▶ Auto';
+  document.getElementById('dual-step-btn').disabled=false;
+  document.getElementById('dual-result-card').style.display='none';
+  document.getElementById('dual-full-log').innerHTML=
+    '<div style="padding:14px 16px;font-size:13px;color:var(--ink-4);font-family:var(--mono)">Log will appear here as you step through…</div>';
+  renderDualPane('lb',-1);renderDualPane('ub',-1);
+  const t=getDualTgt();
+  document.getElementById('dual-lb-decision').innerHTML=`Ready. Will search for <strong>${t}</strong> using <code>arr[mid] &lt; target</code>`;
+  document.getElementById('dual-ub-decision').innerHTML=`Ready. Will search for <strong>${t}</strong> using <code>arr[mid] &lt;= target</code>`;
+}
+
+function dualRun(){dualReset();}
+
+function stepDualMode(mode){
+  const s=dState[mode];const t=getDualTgt();
+  if(s.done)return null;
+  if(s.lo>=s.hi){
+    s.done=true;
+    renderDualPane(mode,-1);
+    return{done:true};
+  }
+  const mid=Math.floor((s.lo+s.hi)/2),v=DARR[mid];
+  const cond=mode==='lb'?v<t:v<=t;
+  const condStr=mode==='lb'?`arr[${mid}]=${v} < ${t}`:`arr[${mid}]=${v} ≤ ${t}`;
+  const condResult=cond;
+  let decision,newVal;
+
+  if(cond){
+    newVal=mid+1;
+    decision=`<span style="color:#dc2626;font-weight:600">arr[${mid}] = ${v} ${mode==='lb'?'&lt;':'&le;'} ${t}</span> → condition TRUE<br>`+
+      `→ mid is too small, search right: <span style="color:#dc2626;font-weight:700">lo = ${mid+1}</span>`;
+    s.lo=mid+1;
+  }else{
+    newVal=mid;
+    s.ans=mid;
+    decision=`<span style="color:var(--ok);font-weight:600">arr[${mid}] = ${v} ${mode==='lb'?'&ge;':'&gt;'} ${t}</span> → condition FALSE<br>`+
+      `→ valid candidate! <span style="color:var(--ok);font-weight:700">ans = ${mid}</span>, search left: <span style="color:#7c3aed;font-weight:700">hi = ${mid}</span>`;
+    s.hi=mid;
+  }
+  renderDualPane(mode,mid);
+  document.getElementById('dual-'+mode+'-decision').innerHTML=decision;
+  return{mid,v,cond,condStr,condResult,newVal,ans:s.ans};
+}
+
+function appendLog(iter,lbRes,ubRes){
+  const logEl=document.getElementById('dual-full-log');
+  if(iter===1)logEl.innerHTML='';
+
+  const diverged=lbRes&&ubRes&&lbRes.cond!==ubRes.cond;
+  const t=getDualTgt();
+
+  const row=document.createElement('div');
+  row.style.cssText=`border-bottom:1px solid var(--rule);${diverged?'background:#fffbeb;':''}`;
+
+  const header=document.createElement('div');
+  header.style.cssText='padding:8px 14px 4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+  header.innerHTML=`<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-4)">ITER ${iter}</span>`+
+    (diverged?`<span style="font-size:11px;font-weight:700;color:#d97706;background:#fef3c7;padding:2px 8px;border-radius:10px">⚡ DIVERGES HERE — arr[mid]==target handled differently</span>`:'');
+  row.appendChild(header);
+
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:0;padding:0 14px 10px';
+
+  function makeCell(res,mode,color){
+    const d=document.createElement('div');
+    d.style.cssText=`padding:6px 10px;border-radius:8px;margin:4px;background:${color};font-family:var(--mono);font-size:11.5px;line-height:1.7`;
+    if(!res||res.done){
+      d.innerHTML=`<span style="font-weight:700">${mode}</span><br><span style="color:var(--ok)">✓ Finished</span>`;
+    }else{
+      const arrow=res.cond?`lo → ${res.newVal}`:`hi → ${res.newVal}, ans=${res.ans}`;
+      d.innerHTML=`<span style="font-weight:700;color:${mode==='lb'?'var(--lb)':'var(--ub)'}">${mode}</span> &nbsp;mid=${res.mid} (val=${res.v})<br>`+
+        `${res.condStr} → <span style="font-weight:700">${res.condResult?'TRUE':'FALSE'}</span><br>`+
+        `<span style="color:${res.condResult?'#dc2626':'var(--ok)'}">→ ${arrow}</span>`;
+    }
+    return d;
+  }
+  grid.appendChild(makeCell(lbRes,'lb','rgba(37,99,235,.05)'));
+  grid.appendChild(makeCell(ubRes,'ub','rgba(124,58,237,.05)'));
+  row.appendChild(grid);
+  logEl.appendChild(row);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+
+function showResult(){
+  const t=getDualTgt();
+  const lb=dState.lb.ans,ub=dState.ub.ans;
+  const count=ub-lb;
+  const exists=lb<DN&&DARR[lb]===t;
+  let html=`<table style="width:100%;font-size:14px;border-collapse:collapse">`;
+  html+=`<tr style="border-bottom:1px solid var(--rule)"><td style="padding:8px 0;color:var(--ink-3)">Target</td><td style="padding:8px 0;font-family:var(--mono);font-weight:700">${t}</td></tr>`;
+  html+=`<tr style="border-bottom:1px solid var(--rule)"><td style="padding:8px 0;color:var(--ink-3)">lower_bound result</td><td style="padding:8px 0;font-family:var(--mono)"><span style="color:var(--lb);font-weight:700">index ${lb}</span>${lb<DN?' → arr['+lb+']='+DARR[lb]:' (end of array)'}</td></tr>`;
+  html+=`<tr style="border-bottom:1px solid var(--rule)"><td style="padding:8px 0;color:var(--ink-3)">upper_bound result</td><td style="padding:8px 0;font-family:var(--mono)"><span style="color:var(--ub);font-weight:700">index ${ub}</span>${ub<DN?' → arr['+ub+']='+DARR[ub]:' (end of array)'}</td></tr>`;
+  html+=`<tr style="border-bottom:1px solid var(--rule)"><td style="padding:8px 0;color:var(--ink-3)">count (ub − lb)</td><td style="padding:8px 0;font-family:var(--mono);font-weight:700">${count}</td></tr>`;
+  html+=`<tr><td style="padding:8px 0;color:var(--ink-3)">Interpretation</td><td style="padding:8px 0">`;
+  if(exists){
+    html+=`<strong>${t}</strong> appears <strong>${count}</strong> time${count>1?'s':''} in the array, at `;
+    const idxs=[];for(let i=lb;i<ub;i++)idxs.push(`index ${i}`);
+    html+=idxs.join(', ')+`.`;
+    if(count>1)html+=`<br>lower_bound points to the <em>first</em> copy; upper_bound points to <em>one past the last</em> copy.`;
+  }else{
+    html+=`<strong>${t}</strong> is <em>not in the array</em>. Both bounds point to the position where it <em>would</em> be inserted (index ${lb}).`;
+  }
+  html+=`</td></tr></table>`;
+  document.getElementById('dual-result-body').innerHTML=html;
+  document.getElementById('dual-result-card').style.display='block';
+}
+
+function dualStep(){
+  if(!dState.lb||(!dState.lb.lo&&dState.lb.lo!==0)){dualReset();}
+  if(dState.lb.done&&dState.ub.done)return;
+  dIterCount++;
+  document.getElementById('dual-iter-count').textContent=dIterCount;
+
+  const lbRes=stepDualMode('lb');
+  const ubRes=stepDualMode('ub');
+
+  /* detect divergence — when arr[mid]==target the conditions differ */
+  if(lbRes&&ubRes&&!lbRes.done&&!ubRes.done&&!dDiverged){
+    if(lbRes.cond!==ubRes.cond){
+      dDiverged=true;dDivergeIter=dIterCount;
+      document.getElementById('dual-diverge-badge').style.display='inline-block';
+    }
+  }
+
+  appendLog(dIterCount,lbRes,ubRes);
+
+  if(dState.lb.done&&dState.ub.done){
+    if(dTimer){clearInterval(dTimer);dTimer=null;document.getElementById('dual-abtn').textContent='▶ Auto';}
+    document.getElementById('dual-done').style.display='inline-block';
+    document.getElementById('dual-step-btn').disabled=true;
+    showResult();
+  }
+}
+
+function dualAuto(){
+  if(!dState.lb||(!dState.lb.lo&&dState.lb.lo!==0))dualReset();
+  if(dTimer){clearInterval(dTimer);dTimer=null;document.getElementById('dual-abtn').textContent='▶ Auto';return;}
+  document.getElementById('dual-abtn').textContent='⏸ Pause';
+  dTimer=setInterval(()=>{
+    if(dState.lb.done&&dState.ub.done){clearInterval(dTimer);dTimer=null;document.getElementById('dual-abtn').textContent='▶ Auto';return;}
+    dualStep();
+  },950);
+}
+
+window.addEventListener('load',()=>{buildStaticArr();dualReset();});
+</script>
+</body>
+</html>
