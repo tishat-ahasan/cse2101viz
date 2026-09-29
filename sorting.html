@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sorting Algorithms — Interactive Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#e9eef2; --panel:#ffffff; --ink:#18263a; --muted:#5c6b7d; --line:#cfd8e1;
+  --grid:rgba(36,70,199,.07); --accent:#2446c7; --accent-ink:#fff;
+  --bar:#9aa9ba; --cmp:#f0a202; --swap:#d1495b; --sorted:#1f9d7a; --done:#9bd8c4;
+  --pivot:#7b4bd1; --key:#2f7de1; --low:#9cc3f5; --high:#f6c98e;
+  --code:#f4f7fa; --hl:#fff0c4; --chip:#eef2f7;
+  --serif:'Literata',Georgia,'Times New Roman',serif;
+  --sans:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10161f; --panel:#17202b; --ink:#e4eaf1; --muted:#93a1b2; --line:#2a3645;
+    --grid:rgba(122,160,255,.06); --accent:#86a4ff; --accent-ink:#0c1320;
+    --bar:#4d5d71; --done:#1f5c4b; --low:#2d4f7c; --high:#7a5a2b;
+    --code:#121a24; --hl:#3b3316; --chip:#1f2a37;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10161f; --panel:#17202b; --ink:#e4eaf1; --muted:#93a1b2; --line:#2a3645;
+  --grid:rgba(122,160,255,.06); --accent:#86a4ff; --accent-ink:#0c1320;
+  --bar:#4d5d71; --done:#1f5c4b; --low:#2d4f7c; --high:#7a5a2b;
+  --code:#121a24; --hl:#3b3316; --chip:#1f2a37;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+nav{border-right:1px solid var(--line);padding:22px 16px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow:auto;background:var(--panel)}
+nav h1{font-family:var(--serif);font-size:1.35rem;line-height:1.2;margin:0 0 4px;font-weight:700}
+nav .sub{color:var(--muted);font-size:.85rem;margin:0 0 18px}
+nav .grp{font-size:.8rem;color:var(--muted);margin:16px 6px 6px;font-weight:700}
+nav button{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.95rem}
+nav button:hover{background:var(--chip)}
+nav button.on{background:var(--accent);color:var(--accent-ink)}
+.themebtn{margin-top:22px;font-size:.85rem!important;color:var(--muted)}
+
+main{padding:28px clamp(14px,3vw,36px) 60px;max-width:1280px;width:100%}
+.phead h2{font-family:var(--serif);font-size:clamp(1.7rem,3vw,2.3rem);margin:0;line-height:1.15}
+.phead p{color:var(--muted);max-width:70ch;margin:6px 0 18px}
+
+.stage{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:18px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;font-size:.9rem;margin-bottom:12px}
+.toolbar label{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.toolbar select,.toolbar input[type=text]{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.toolbar input[type=text]{width:170px;font-family:var(--mono);font-size:.82rem}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:7px;padding:5px 11px;cursor:pointer;font-size:.9rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.err{color:var(--swap);font-size:.85rem;width:100%}
+
+.viz{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+.bars{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:230px;padding-top:20px;min-width:min-content}
+.bars.hide{display:none}
+.bar{flex:1 1 0;min-width:12px;max-width:46px;position:relative;border-radius:4px 4px 1px 1px;background:var(--c,var(--bar));transition:height .18s ease,background-color .15s,opacity .15s}
+.bar .v{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--ink);white-space:nowrap}
+.bar.dim{opacity:.18}.bar.stale{opacity:.4}
+#aux:not(:empty){margin-top:14px}
+.row{display:flex;align-items:flex-start;gap:10px;margin:6px 0 4px}
+.rl{flex:none;width:118px;font-size:.8rem;color:var(--muted);padding-top:7px;line-height:1.2}
+.cells{display:flex;flex-wrap:wrap;gap:4px 3px}
+.cell{min-width:34px;height:32px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:12.5px;background:var(--c,var(--panel));position:relative}
+.cell.hasix{margin-bottom:15px}
+.cell .ix{position:absolute;bottom:-16px;font-style:normal;font-size:10px;color:var(--muted)}
+.cell.cmp{color:#1b1400}.cell.swap,.cell.sorted,.cell.pivot,.cell.key,.cell.min{color:#fff;border-color:transparent}
+.cell.used{opacity:.35;text-decoration:line-through}
+.cell.empty{color:var(--muted);border-style:dashed;background:transparent}
+.cell u{text-decoration-thickness:2px;text-underline-offset:3px;color:var(--swap);font-weight:600}
+.cell.cmp u,.cell.sorted u{color:inherit}
+.bk{display:grid;grid-template-columns:repeat(var(--nb),minmax(44px,1fr));gap:5px;min-width:min-content}
+.bucket{border:1px dashed var(--line);border-radius:8px;min-height:120px;padding:4px;display:flex;flex-direction:column;gap:3px;background:var(--panel)}
+.bucket .bl{font-size:.75rem;color:var(--muted);text-align:center;line-height:1.15;margin-bottom:2px}
+.bucket .bl small{display:block;font-size:.65rem}
+.bucket .cell{width:100%;min-width:0;height:26px;font-size:11.5px}
+
+.cmp{--c:var(--cmp)}.swap{--c:var(--swap)}.sorted{--c:var(--sorted)}.done{--c:var(--done)}
+.pivot,.min{--c:var(--pivot)}.key{--c:var(--key)}.low{--c:var(--low)}.high{--c:var(--high)}
+
+.msg{min-height:3em;margin:12px 2px 6px;font-size:.98rem}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.controls .btn{min-width:40px}
+.controls input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.speed{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+.speed input{width:90px;accent-color:var(--accent)}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.stat{background:var(--chip);border-radius:8px;padding:5px 10px;font-size:.85rem}
+.stat b{font-family:var(--mono);font-size:.95rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:12px;height:12px;border-radius:3px;background:var(--c,var(--bar));display:inline-block}
+.sw.used,.sw.stale{opacity:.4}.sw.dim{opacity:.18}
+
+.codecard h3,.analysis h3{font-family:var(--serif);font-size:1.15rem;margin:0 0 10px}
+.code{font-family:var(--mono);font-size:12.5px;background:var(--code);border-radius:8px;padding:8px 0;overflow-x:auto;border:1px solid var(--line)}
+.ln{display:flex;padding:2px 12px 2px 8px;white-space:pre;border-left:3px solid transparent}
+.ln .n{color:var(--muted);width:24px;flex:none;text-align:right;margin-right:12px;user-select:none}
+.ln.on{background:var(--hl);border-left-color:var(--accent)}
+.vars{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;min-height:28px}
+.chip{background:var(--chip);border-radius:20px;padding:3px 10px;font-family:var(--mono);font-size:12px}
+.keys{margin-top:14px;font-size:.8rem;color:var(--muted)}
+kbd{font-family:var(--mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--paper)}
+
+.analysis{margin-top:18px}
+.prose{max-width:78ch;font-family:var(--serif);line-height:1.65;font-size:1rem}
+.prose h3{margin-top:22px}
+.prose h3:first-child{margin-top:0}
+.prose code,.prose .m{font-family:var(--mono);font-size:.86em;background:var(--chip);padding:1px 5px;border-radius:4px}
+.prose li{margin:4px 0}
+.tw{overflow-x:auto;margin:10px 0 16px}
+table{border-collapse:collapse;font-family:var(--sans);font-size:.9rem;min-width:100%}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:700;font-size:.82rem}
+td.wrap{white-space:normal;min-width:220px}
+.calc{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;font-family:var(--sans)}
+.calc label{display:flex;flex-direction:column;font-size:.82rem;color:var(--muted);gap:3px}
+.calc input{width:130px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-family:var(--mono)}
+.calc input[type=range]{width:180px;padding:0;accent-color:var(--accent)}
+.out{font-family:var(--mono);font-size:.88rem;width:100%;line-height:1.8}
+.out b{color:var(--accent)}
+.tree svg{width:100%;height:auto;max-width:720px;display:block}
+.tree .nd rect{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+.tree .nd text{font-family:var(--mono);font-size:13px;fill:var(--ink)}
+.tree .nd.leaf rect{fill:var(--chip)}
+.tree .nd.on rect{stroke:var(--accent);stroke-width:2.5}
+.tree .nd.leaf.on rect{fill:var(--sorted);stroke:var(--sorted)}
+.tree .nd.leaf.on text{fill:#fff}
+.tree line{stroke:var(--line);stroke-width:1.5}
+.tree line.on{stroke:var(--accent);stroke-width:3}
+.tree .el{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+.chart svg{width:100%;height:auto;max-width:720px;display:block}
+.chart text{font-family:var(--sans);font-size:11px;fill:var(--muted)}
+
+@media (max-width: 980px){ .stage{grid-template-columns:minmax(0,1fr)} }
+@media (max-width: 760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  nav{position:sticky;top:0;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px calc(10px) ;display:flex;gap:6px;overflow-x:auto;align-items:center;z-index:5;padding-top:calc(10px + env(safe-area-inset-top,0px));top:0}
+  :root{padding-top:0}
+  nav h1,nav .sub,nav .grp{display:none}
+  nav button{display:inline-block;width:auto;white-space:nowrap;flex:none}
+  .themebtn{margin-top:0}
+  .bars{height:190px}
+  .rl{width:78px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav id="nav" aria-label="Topics"></nav>
+  <main>
+    <section id="player" hidden>
+      <div class="phead"><h2 id="pTitle"></h2><p id="pBlurb"></p></div>
+      <div class="stage">
+        <div class="card">
+          <div class="toolbar">
+            <label>Input
+              <select id="pattern">
+                <option value="random">Random</option>
+                <option value="sorted">Already sorted</option>
+                <option value="reversed">Reversed</option>
+                <option value="nearly">Nearly sorted</option>
+                <option value="few">Few unique values</option>
+              </select>
+            </label>
+            <label><span id="nLabel">n</span> <input type="range" id="size" min="4" max="30" value="12"> <b id="sizeV">12</b></label>
+            <label id="memWrap" hidden>Memory M <input type="range" id="mem" min="3" max="6" value="3"> <b id="memV">3</b></label>
+            <button class="btn" id="newBtn">New input</button>
+            <button class="btn" id="rerunBtn" hidden title="Same input, new random pivots">Re-roll pivots</button>
+            <label>Custom <input type="text" id="custom" placeholder="e.g. 5 2 9 1 7"></label>
+            <button class="btn" id="applyBtn">Use</button>
+            <div class="err" id="err" hidden></div>
+          </div>
+          <div class="viz"><div class="bars" id="bars"></div><div id="aux"></div></div>
+          <div class="msg" id="msg" aria-live="polite"></div>
+          <div class="controls">
+            <button class="btn" id="bStart" title="Go to start">⏮</button>
+            <button class="btn" id="bBack" title="Step back">◀</button>
+            <button class="btn primary" id="bPlay" title="Play / pause">▶ Play</button>
+            <button class="btn" id="bFwd" title="Step forward">▶|</button>
+            <button class="btn" id="bEnd" title="Go to end">⏭</button>
+            <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Timeline">
+            <span class="speed">Speed <input type="range" id="speed" min="1" max="10" value="5"></span>
+          </div>
+          <div class="stats">
+            <span class="stat"><span id="l1">Comparisons</span>: <b id="s1">0</b></span>
+            <span class="stat"><span id="l2">Writes</span>: <b id="s2">0</b></span>
+            <span class="stat">Step <b id="s3">0 / 0</b></span>
+          </div>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="card codecard">
+          <h3>Pseudocode</h3>
+          <div class="code" id="code"></div>
+          <div class="vars" id="vars"></div>
+          <div class="keys"><kbd>Space</kbd> play/pause · <kbd>←</kbd> <kbd>→</kbd> step · <kbd>Home</kbd> <kbd>End</kbd></div>
+        </div>
+      </div>
+      <div class="card analysis"><div class="prose" id="analysis"></div></div>
+    </section>
+    <section id="static" hidden></section>
+  </main>
+</div>
+
+<script>
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let curType = 'int';
+const fmt = v => (typeof v === 'number' && curType === 'unit') ? v.toFixed(2).replace(/^0/, '') : v;
+const allSorted = n => { const o = {}; for (let t = 0; t < n; t++) o[t] = 'sorted'; return o; };
+const table = (rows) => `<div class="tw"><table><tr><th>Case</th><th>Time</th><th>When it happens</th></tr>${rows.map(r => `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td class="wrap">${r[2]}</td></tr>`).join('')}</table></div>`;
+const props = (p) => `<div class="tw"><table><tr>${Object.keys(p).map(k => `<th>${k}</th>`).join('')}</tr><tr>${Object.values(p).map(v => `<td>${v}</td>`).join('')}</tr></table></div>`;
+
+function recorder() {
+  const F = [], S = { cmp: 0, wr: 0 };
+  return { F, S };
+}
+
+/* ============ Insertion sort ============ */
+function insertionRun(A) {
+  const a = A.slice(), n = a.length, { F, S } = recorder();
+  const pre = k => { const o = {}; for (let t = 0; t < k; t++) o[t] = 'done'; return o; };
+  const P = (line, msg, st, vars) => F.push({ a: a.slice(), st: st || {}, line, msg, vars: vars || {}, cmp: S.cmp, wr: S.wr });
+  P('head', 'Start. The prefix A[0..0] (one element) is trivially sorted.', pre(1));
+  for (let i = 1; i < n; i++) {
+    const key = a[i];
+    P('for', `i = ${i}: insert A[${i}] into the sorted prefix A[0..${i - 1}].`, Object.assign(pre(i), { [i]: 'key' }), { i });
+    P('key', `key ← ${key}`, Object.assign(pre(i), { [i]: 'key' }), { i, key });
+    let j = i - 1;
+    P('j', `j ← ${j}`, Object.assign(pre(i), { [i]: 'key' }), { i, key, j });
+    while (true) {
+      if (j < 0) { P('while', 'j < 0: reached the front of the array, stop shifting.', Object.assign(pre(i + 1), { 0: 'key' }), { i, key, j }); break; }
+      S.cmp++;
+      const big = a[j] > key;
+      P('while', `Is A[${j}] = ${a[j]} > key = ${key}? ${big ? 'Yes, so it must move right.' : 'No, so key belongs right after it.'}`, Object.assign(pre(i + 1), { [j]: 'cmp', [j + 1]: 'key' }), { i, key, j });
+      if (!big) break;
+      a[j + 1] = a[j]; a[j] = key; S.wr++;
+      P('shift', `Shift ${a[j + 1]} one slot right: A[${j + 1}] ← A[${j}].`, Object.assign(pre(i + 1), { [j + 1]: 'swap', [j]: 'key' }), { i, key, j });
+      j--;
+      P('dec', `j ← ${j}`, Object.assign(pre(i + 1), { [j + 1]: 'key' }), { i, key, j });
+    }
+    S.wr++;
+    P('place', `Place key ${key} at A[${j + 1}]. The prefix A[0..${i}] is now sorted.`, Object.assign(pre(i + 1), { [j + 1]: 'sorted' }), { i, key, j });
+  }
+  P('done', `Sorted. ${S.cmp} comparisons and ${S.wr} writes.`, allSorted(n));
+  return F;
+}
+
+/* ============ Selection sort ============ */
+function selectionRun(A) {
+  const a = A.slice(), n = a.length, { F, S } = recorder();
+  const pre = k => { const o = {}; for (let t = 0; t < k; t++) o[t] = 'sorted'; return o; };
+  const P = (line, msg, st, vars) => F.push({ a: a.slice(), st: st || {}, line, msg, vars: vars || {}, cmp: S.cmp, wr: S.wr });
+  P('head', 'Start. Each pass selects the smallest element of the unsorted part A[i..n−1].', {});
+  for (let i = 0; i < n - 1; i++) {
+    P('for', `i = ${i}: find the minimum of A[${i}..${n - 1}].`, Object.assign(pre(i), { [i]: 'key' }), { i });
+    let min = i;
+    P('min', `min ← ${i} (value ${a[i]})`, Object.assign(pre(i), { [i]: 'min' }), { i, min });
+    for (let j = i + 1; j < n; j++) {
+      S.cmp++;
+      const less = a[j] < a[min];
+      P('if', `Is A[${j}] = ${a[j]} < A[min] = ${a[min]}? ${less ? 'Yes' : 'No'}`, Object.assign(pre(i), { [min]: 'min', [j]: 'cmp' }), { i, j, min });
+      if (less) { min = j; P('upd', `New minimum: min ← ${j} (value ${a[j]})`, Object.assign(pre(i), { [min]: 'min' }), { i, j, min }); }
+    }
+    if (min !== i) {
+      [a[i], a[min]] = [a[min], a[i]]; S.wr++;
+      P('swap', `Swap A[${i}] ↔ A[${min}]: ${a[i]} moves to its final position ${i}.`, Object.assign(pre(i), { [i]: 'swap', [min]: 'swap' }), { i, min });
+    } else {
+      P('swap', `A[${i}] is already the minimum, so no swap is needed.`, Object.assign(pre(i), { [i]: 'swap' }), { i, min });
+    }
+  }
+  P('done', `Sorted. Exactly ${S.cmp} = n(n−1)/2 comparisons, only ${S.wr} swaps.`, allSorted(n));
+  return F;
+}
+
+/* ============ Bubble sort ============ */
+function bubbleRun(A) {
+  const a = A.slice(), n = a.length, { F, S } = recorder();
+  const suf = k => { const o = {}; for (let t = n - k; t < n; t++) o[t] = 'sorted'; return o; };
+  const P = (line, msg, st, vars) => F.push({ a: a.slice(), st: st || {}, line, msg, vars: vars || {}, cmp: S.cmp, wr: S.wr });
+  P('head', 'Start. Each pass bubbles the largest remaining element to the end.', {});
+  for (let i = 0; i < n - 1; i++) {
+    P('for', `Pass ${i + 1}: scan A[0..${n - 1 - i}].`, suf(i), { i });
+    let swapped = false;
+    P('flag', 'swapped ← false', suf(i), { i, swapped: 'false' });
+    for (let j = 0; j < n - 1 - i; j++) {
+      S.cmp++;
+      const gt = a[j] > a[j + 1];
+      P('if', `Is A[${j}] = ${a[j]} > A[${j + 1}] = ${a[j + 1]}? ${gt ? 'Yes, swap them.' : 'No.'}`, Object.assign(suf(i), { [j]: 'cmp', [j + 1]: 'cmp' }), { i, j, swapped: String(swapped) });
+      if (gt) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]]; S.wr++; swapped = true;
+        P('swap', `Swapped: A[${j}] = ${a[j]}, A[${j + 1}] = ${a[j + 1]}; swapped ← true.`, Object.assign(suf(i), { [j]: 'swap', [j + 1]: 'swap' }), { i, j, swapped: 'true' });
+      }
+    }
+    if (!swapped) {
+      P('brk', `No swaps in pass ${i + 1}, so the array is sorted. Stop early.`, allSorted(n), { i, swapped: 'false' });
+      break;
+    }
+    P('brk', `End of pass ${i + 1}: ${a[n - 1 - i]} has reached its final position ${n - 1 - i}.`, suf(i + 1), { i, swapped: 'true' });
+  }
+  P('done', `Sorted. ${S.cmp} comparisons, ${S.wr} swaps (= number of inversions).`, allSorted(n));
+  return F;
+}
+
+/* ============ Merge sort ============ */
+function mergeRun(A) {
+  const a = A.slice(), n = a.length, { F, S } = recorder();
+  const P = (line, msg, st, vars, range, aux) => F.push({ a: a.slice(), st: st || {}, line, msg, vars: vars || {}, range, aux, cmp: S.cmp, wr: S.wr });
+  const doneR = (l, r) => { const o = {}; for (let t = l; t <= r; t++) o[t] = 'done'; return o; };
+  function ms(l, r) {
+    P('head', `Call MergeSort(A, ${l}, ${r}).`, {}, { l, r }, [l, r]);
+    if (l >= r) { P('base', `l = r: a single element is already sorted.`, { [l]: 'done' }, { l, r }, [l, r]); return; }
+    const m = (l + r) >> 1;
+    P('mid', `Split at m = ⌊(${l} + ${r}) / 2⌋ = ${m}.`, {}, { l, m, r }, [l, r]);
+    P('recL', `Sort the left half A[${l}..${m}].`, {}, { l, m, r }, [l, m]);
+    ms(l, m);
+    P('recR', `Sort the right half A[${m + 1}..${r}].`, doneR(l, m), { l, m, r }, [m + 1, r]);
+    ms(m + 1, r);
+    P('callM', `Both halves are sorted. Merge A[${l}..${m}] with A[${m + 1}..${r}].`, doneR(l, r), { l, m, r }, [l, r]);
+    merge(l, m, r);
+  }
+  function merge(l, m, r) {
+    const L = a.slice(l, m + 1), R = a.slice(m + 1, r + 1);
+    let i = 0, j = 0, k = l;
+    const aux = (ci, cj) => [
+      { label: 'L = A[' + l + '..' + m + ']', cells: L.map((v, t) => ({ v, cls: t < i ? 'used' : t === ci ? 'cmp' : '', idx: t })) },
+      { label: 'R = A[' + (m + 1) + '..' + r + ']', cells: R.map((v, t) => ({ v, cls: t < j ? 'used' : t === cj ? 'cmp' : '', idx: t })) }
+    ];
+    const st = (hl) => { const o = {}; for (let t = l; t < k; t++) o[t] = 'done'; for (let t = k; t <= r; t++) o[t] = 'stale'; if (hl !== undefined) o[hl] = 'swap'; return o; };
+    P('copy', `Copy the halves into temporary arrays L (${L.length}) and R (${R.length}).`, st(), { l, m, r }, [l, r], aux(-1, -1));
+    P('init', 'i ← 0, j ← 0, k ← ' + l, st(), { i, j, k }, [l, r], aux(-1, -1));
+    while (i < L.length && j < R.length) {
+      S.cmp++;
+      P('while', `Compare L[${i}] = ${L[i]} with R[${j}] = ${R[j]}.`, st(), { i, j, k }, [l, r], aux(i, j));
+      if (L[i] <= R[j]) {
+        a[k] = L[i]; S.wr++;
+        P('takeL', `${L[i]} ≤ ${R[j]}, so A[${k}] ← L[${i}] = ${L[i]}. (Ties take from L, which keeps the sort stable.)`, st(k), { i, j, k }, [l, r], aux(i, -1));
+        i++;
+      } else {
+        a[k] = R[j]; S.wr++;
+        P('takeR', `${L[i]} > ${R[j]}, so A[${k}] ← R[${j}] = ${R[j]}.`, st(k), { i, j, k }, [l, r], aux(-1, j));
+        j++;
+      }
+      k++;
+    }
+    while (i < L.length) { a[k] = L[i]; S.wr++; P('rest', `R is exhausted. Copy leftover L[${i}] = ${L[i]} to A[${k}].`, st(k), { i, j, k }, [l, r], aux(i, -1)); i++; k++; }
+    while (j < R.length) { a[k] = R[j]; S.wr++; P('rest', `L is exhausted. Copy leftover R[${j}] = ${R[j]} to A[${k}].`, st(k), { i, j, k }, [l, r], aux(-1, j)); j++; k++; }
+    P('rest', `A[${l}..${r}] is now sorted.`, doneR(l, r), { l, r }, [l, r], aux(-1, -1));
+  }
+  ms(0, n - 1);
+  P(null, `Sorted. ${S.cmp} comparisons, ${S.wr} writes. Compare with n⌈lg n⌉ = ${n * Math.ceil(Math.log2(n))}.`, allSorted(n));
+  return F;
+}
+
+/* ============ Randomized quicksort ============ */
+function quickRun(A) {
+  const a = A.slice(), n = a.length, { F, S } = recorder();
+  const FX = new Set();
+  const P = (line, msg, st, vars, range) => F.push({ a: a.slice(), st: st || {}, line, msg, vars: vars || {}, range, cmp: S.cmp, wr: S.wr });
+  const stq = (extra) => { const o = {}; FX.forEach(t => o[t] = 'sorted'); return Object.assign(o, extra || {}); };
+  const region = (p, i, j) => { const o = {}; for (let t = p; t <= i; t++) o[t] = 'low'; for (let t = i + 1; t < j; t++) o[t] = 'high'; return o; };
+  function part(p, r) {
+    const k = p + Math.floor(Math.random() * (r - p + 1));
+    P('rand', `Choose a random pivot index k = ${k} (value ${a[k]}).`, stq({ [k]: 'pivot' }), { p, r, k }, [p, r]);
+    if (k !== r) { [a[k], a[r]] = [a[r], a[k]]; S.wr++; }
+    P('rand', `Move the pivot to the end: swap A[${k}] ↔ A[${r}].`, stq({ [r]: 'pivot' }), { p, r, k }, [p, r]);
+    const x = a[r]; let i = p - 1;
+    P('x', `Pivot x = ${x}. i ← ${i} marks the end of the "≤ x" region (empty so far).`, stq({ [r]: 'pivot' }), { p, r, x, i }, [p, r]);
+    for (let j = p; j < r; j++) {
+      S.cmp++;
+      const le = a[j] <= x;
+      P('if2', `Is A[${j}] = ${a[j]} ≤ x = ${x}? ${le ? 'Yes, grow the ≤ region.' : 'No, it stays in the > region.'}`, stq(Object.assign(region(p, i, j), { [j]: 'cmp', [r]: 'pivot' })), { x, i, j }, [p, r]);
+      if (le) {
+        i++;
+        if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; S.wr++; }
+        P('sw', `i ← ${i}; swap A[${i}] ↔ A[${j}].`, stq(Object.assign(region(p, i, j + 1), { [i]: 'swap', [r]: 'pivot' })), { x, i, j }, [p, r]);
+      }
+    }
+    [a[i + 1], a[r]] = [a[r], a[i + 1]]; S.wr++;
+    FX.add(i + 1);
+    P('fin', `Swap the pivot into A[${i + 1}]. It is now in its final sorted position.`, stq(region(p, i, r + 1)), { x, q: i + 1 }, [p, r]);
+    P('ret', `Return q = ${i + 1}: everything left of it is ≤ ${x}, everything right is > ${x}.`, stq(region(p, i, r + 1)), { q: i + 1 }, [p, r]);
+    return i + 1;
+  }
+  function qs(p, r) {
+    if (p > r) return;
+    P('head', `Call RandQuickSort(A, ${p}, ${r}).`, stq(), { p, r }, [p, r]);
+    if (p === r) { FX.add(p); P('if', `p = r: one element is already in place.`, stq(), { p, r }, [p, r]); return; }
+    P('if', `p < r, so partition A[${p}..${r}].`, stq(), { p, r }, [p, r]);
+    const q = part(p, r);
+    P('recL', `Recurse on the left part A[${p}..${q - 1}].`, stq(), { p, q, r }, [p, Math.max(p, q - 1)]);
+    qs(p, q - 1);
+    P('recR', `Recurse on the right part A[${q + 1}..${r}].`, stq(), { p, q, r }, [Math.min(q + 1, r), r]);
+    qs(q + 1, r);
+  }
+  qs(0, n - 1);
+  P(null, `Sorted. ${S.cmp} comparisons. For reference, 2n ln n ≈ ${Math.round(2 * n * Math.log(n))}.`, allSorted(n));
+  return F;
+}
+
+/* ============ Counting sort ============ */
+function countingRun(A) {
+  const a = A.slice(), n = a.length, k = Math.max(...a), { F, S } = recorder();
+  const C = new Array(k + 1).fill(0), B = new Array(n).fill(null);
+  const P = (line, msg, st, vars, hc, hb) => F.push({
+    a: a.slice(), st: st || {}, line, msg, vars: vars || {}, cmp: S.cmp, wr: S.wr,
+    aux: [
+      { label: 'C (counts)', cells: C.map((v, t) => ({ v, idx: t, cls: t === hc ? 'cmp' : '' })) },
+      { label: 'B (output)', cells: B.map((v, t) => ({ v: v === null ? '·' : v, idx: t, cls: t === hb ? 'swap' : v === null ? 'empty' : 'sorted' })) }
+    ]
+  });
+  P('head', `Keys are integers in 0..k with k = ${k}. No comparisons between keys will be made.`, {}, { n, k });
+  P('init', `Create C[0..${k}] filled with zeros.`, {}, { k });
+  for (let j = 0; j < n; j++) {
+    C[a[j]]++; S.wr++;
+    P('count', `A[${j}] = ${a[j]}, so C[${a[j]}]++ (now ${C[a[j]]}).`, { [j]: 'cmp' }, { j }, a[j]);
+  }
+  for (let i = 1; i <= k; i++) {
+    C[i] += C[i - 1]; S.wr++;
+    P('prefix', `C[${i}] ← C[${i}] + C[${i - 1}] = ${C[i]}: there are ${C[i]} keys ≤ ${i}.`, {}, { i }, i);
+  }
+  P('back', 'Now C[v] is one past the last output slot for value v. Scan A right-to-left to stay stable.', {}, {});
+  for (let j = n - 1; j >= 0; j--) {
+    const v = a[j], pos = C[v] - 1;
+    B[pos] = v; S.wr++;
+    P('place', `A[${j}] = ${v} goes to B[C[${v}] − 1] = B[${pos}].`, { [j]: 'swap' }, { j }, v, pos);
+    C[v]--; S.wr++;
+    P('dec', `C[${v}] ← ${C[v]}, so the next ${v} (further left in A) lands just before it.`, { [j]: 'swap' }, { j }, v);
+  }
+  for (let t = 0; t < n; t++) a[t] = B[t];
+  P('ret', `Done in Θ(n + k) = Θ(${n} + ${k}) steps, with 0 key comparisons.`, allSorted(n), {});
+  return F;
+}
+
+/* ============ Radix sort (LSD) ============ */
+function radixRun(A) {
+  let a = A.slice(); const n = a.length, { F, S } = recorder();
+  const d = String(Math.max(...a)).length;
+  const names = ['ones', 'tens', 'hundreds', 'thousands'];
+  const dig = (v, p) => Math.floor(v / 10 ** p) % 10;
+  const dh = (v, p) => { const s = String(v).padStart(d, '0'); const ix = d - 1 - p; return s.slice(0, ix) + '<u>' + s[ix] + '</u>' + s.slice(ix + 1); };
+  let B = Array.from({ length: 10 }, () => []);
+  const P = (line, msg, st, vars, pos, hl, done) => F.push({
+    a: a.slice(), st: st || {}, line, msg, vars: vars || {}, cmp: S.cmp, wr: S.wr,
+    aux: pos === undefined ? [] : [
+      { label: 'A, digit ' + (pos + 1), cells: a.map((v, t) => ({ h: dh(v, pos), cls: t === hl ? 'cmp' : '' })) },
+      { type: 'buckets', labels: B.map((_, i) => String(i)), buckets: B.map(b => b.map(c => ({ h: dh(c.v, pos), cls: c.hl ? 'cmp' : done ? 'sorted' : '' }))) }
+    ]
+  });
+  P('head', `Numbers have d = ${d} digit${d > 1 ? 's' : ''}. Sort by the least significant digit first, using a stable bucket pass each time.`, {}, { d });
+  for (let pos = 0; pos < d; pos++) {
+    B = Array.from({ length: 10 }, () => []);
+    P('pass', `Pass ${pos + 1}: distribute by the ${names[pos]} digit (underlined).`, {}, { pos }, pos);
+    P('empty', 'Start with 10 empty buckets, one per digit value.', {}, { pos }, pos);
+    for (let t = 0; t < n; t++) {
+      const x = a[t], g = dig(x, pos);
+      B.forEach(b => b.forEach(c => c.hl = false));
+      B[g].push({ v: x, hl: true }); S.wr++;
+      P('put', `${x} has ${names[pos]} digit ${g}, so append it to bucket ${g}.`, { [t]: 'cmp' }, { pos, x, digit: g }, pos, t);
+    }
+    B.forEach(b => b.forEach(c => c.hl = false));
+    a = [].concat(...B.map(b => b.map(c => c.v))); S.wr += n;
+    P('cat', `Concatenate buckets 0..9. A is now sorted by its last ${pos + 1} digit${pos ? 's' : ''}.`, pos === d - 1 ? allSorted(n) : {}, { pos }, pos, -1, true);
+  }
+  P('ret', `Sorted in d = ${d} passes, Θ(d(n + b)) with base b = 10. No key comparisons.`, allSorted(n));
+  return F;
+}
+
+/* ============ Bucket sort ============ */
+function bucketRun(A) {
+  const a = A.slice(), n = a.length, { F, S } = recorder();
+  const B = Array.from({ length: n }, () => []);
+  const rows = cf => [{ type: 'buckets', labels: B.map((_, i) => 'B[' + i + ']'), sub: B.map((_, i) => '[' + (i / n).toFixed(2).slice(1) + ', ' + ((i + 1) / n).toFixed(2).slice(1) + ')'), buckets: B.map((b, i) => b.map((v, t) => ({ v, cls: cf(i, t) }))) }];
+  const P = (line, msg, st, aux, vars) => F.push({ a: a.slice(), st: st || {}, line, msg, vars: vars || {}, aux, cmp: S.cmp, wr: S.wr });
+  P('head', 'Inputs are assumed uniform on [0, 1). The expected size of each bucket is about 1.', {}, rows(() => ''));
+  P('make', `Create n = ${n} empty buckets. Bucket i holds keys in [i/n, (i+1)/n).`, {}, rows(() => ''), { n });
+  a.forEach((x, t) => {
+    const b = Math.floor(n * x);
+    B[b].push(x); S.wr++;
+    P('put', `${fmt(x)} goes to bucket ⌊${n} × ${fmt(x)}⌋ = ${b}.`, { [t]: 'cmp' }, rows((i, u) => i === b && u === B[b].length - 1 ? 'cmp' : ''), { x: fmt(x), bucket: b });
+  });
+  B.forEach((b, i) => {
+    if (b.length < 2) return;
+    let c = 0;
+    for (let p = 1; p < b.length; p++) { const key = b[p]; let q = p - 1; while (q >= 0) { c++; if (b[q] > key) { b[q + 1] = b[q]; q--; } else break; } b[q + 1] = key; }
+    S.cmp += c;
+    P('sort', `Insertion-sort bucket ${i} (${b.length} items, ${c} comparison${c === 1 ? '' : 's'}).`, {}, rows(ii => ii === i ? 'sorted' : ''), { bucket: i });
+  });
+  let k = 0;
+  const pre = () => { const o = {}; for (let t = 0; t < k; t++) o[t] = 'sorted'; return o; };
+  B.forEach((b, i) => {
+    if (!b.length) return;
+    const s = k;
+    b.forEach(v => { a[k++] = v; S.wr++; });
+    P('cat', `Append bucket ${i} to the output: A[${s}..${k - 1}].`, pre(), rows(ii => ii <= i ? 'used' : ''), { bucket: i });
+  });
+  const mx = Math.max(...B.map(b => b.length));
+  P(null, `Sorted. Largest bucket held ${mx} item${mx === 1 ? '' : 's'}; only ${S.cmp} comparisons in total.`, allSorted(n), rows(() => 'used'));
+  return F;
+}
+
+/* ============ External merge sort ============ */
+function externalRun(input, opts) {
+  const M = opts.M, N = input.length, k = Math.max(2, M - 1), { F, S } = recorder();
+  const P = (line, msg, rows, vars) => F.push({ a: null, line, msg, aux: rows, vars: vars || {}, cmp: S.cmp, wr: S.wr });
+  let consumed = 0, mem = [], runs = [];
+  const memCells = (cls) => { const c = mem.map(v => ({ v, cls })); while (c.length < M) c.push({ v: '·', cls: 'empty' }); return c; };
+  const rows1 = (cls) => [
+    { label: 'Disk: input file', cells: input.map((v, t) => ({ v, cls: t < consumed ? 'used' : '' })) },
+    { label: `Memory (M = ${M})`, cells: memCells(cls) },
+    ...runs.map((r, t) => ({ label: `Run ${t + 1}`, cells: r.map(v => ({ v, cls: 'sorted' })) }))
+  ];
+  P('head', `The file has N = ${N} records but memory holds only M = ${M}. Cost is counted in disk reads and writes.`, rows1(''), { N, M });
+  P('p1', `Phase 1: cut the file into ⌈N/M⌉ = ${Math.ceil(N / M)} sorted runs.`, rows1(''), { N, M });
+  while (consumed < N) {
+    mem = input.slice(consumed, consumed + M); S.wr += mem.length; consumed += mem.length;
+    P('read', `Read the next ${mem.length} records into memory (${mem.length} reads).`, rows1('key'));
+    mem.sort((x, y) => { S.cmp++; return x - y; });
+    P('sort', 'Sort them in memory with any internal sort.', rows1('cmp'));
+    runs.push(mem); S.wr += mem.length; mem = [];
+    P('write', `Write run ${runs.length} back to disk (${runs[runs.length - 1].length} writes).`, rows1(''));
+  }
+  let pass = 0;
+  P('p2', `Phase 2: merge ${k} runs at a time, using ${k} input buffers + 1 output buffer = M.`, rows1(''), { k });
+  while (runs.length > 1) {
+    pass++;
+    const newRuns = [];
+    P('while', `Merge pass ${pass}: ${runs.length} runs → ${Math.ceil(runs.length / k)} run${Math.ceil(runs.length / k) > 1 ? 's' : ''}.`,
+      runs.map((r, t) => ({ label: `Run ${t + 1}`, cells: r.map(v => ({ v, cls: 'sorted' })) })), { pass, k });
+    for (let g = 0; g < runs.length; g += k) {
+      const group = runs.slice(g, g + k);
+      const ptr = group.map(() => 0); let out = [], last = null;
+      const rows2 = (hl) => [
+        ...runs.map((r, t) => {
+          const inG = t >= g && t < g + group.length, gi = t - g;
+          return { label: `Run ${t + 1}${inG ? ' (merging)' : ''}`, cells: r.map((v, u) => ({ v, cls: t < g ? 'used' : inG ? (u < ptr[gi] ? 'used' : u === ptr[gi] ? 'key' : '') : '' })) };
+        }),
+        { label: 'Memory buffers', cells: [...group.map((r, t) => ({ v: ptr[t] < r.length ? r[ptr[t]] : '∅', idx: 'R' + (g + t + 1), cls: t === hl ? 'cmp' : ptr[t] >= r.length ? 'empty' : 'key' })), { v: last === null ? '·' : last, idx: 'out', cls: last === null ? 'empty' : 'swap' }] },
+        ...newRuns.map((r, t) => ({ label: `New run ${t + 1}`, cells: r.map(v => ({ v, cls: 'sorted' })) })),
+        { label: `New run ${newRuns.length + 1}`, cells: out.length ? out.map(v => ({ v, cls: 'sorted' })) : [{ v: '·', cls: 'empty' }] }
+      ];
+      if (group.length === 1) {
+        newRuns.push(group[0]);
+        P('group', `Run ${g + 1} has no partner this pass, so it carries over unchanged.`,
+          [...runs.map((r, t) => ({ label: `Run ${t + 1}`, cells: r.map(v => ({ v, cls: t <= g ? 'used' : '' })) })), ...newRuns.map((r, t) => ({ label: `New run ${t + 1}`, cells: r.map(v => ({ v, cls: 'sorted' })) }))], { pass });
+        continue;
+      }
+      S.wr += group.length;
+      P('load', `Load the head of runs ${g + 1}–${g + group.length} into the input buffers.`, rows2(-1), { pass });
+      while (true) {
+        let best = -1, active = 0;
+        group.forEach((r, t) => { if (ptr[t] < r.length) { active++; if (best < 0 || r[ptr[t]] < group[best][ptr[best]]) best = t; } });
+        if (best < 0) break;
+        S.cmp += Math.max(0, active - 1);
+        const v = group[best][ptr[best]];
+        P('emit', `Smallest buffer head is ${v} (run ${g + best + 1}). Move it to the output buffer.`, rows2(best), { pass, min: v });
+        out.push(v); last = v; S.wr++; ptr[best]++;
+        if (ptr[best] < group[best].length) S.wr++;
+        P('emit', ptr[best] < group[best].length ? `Written out. Refill buffer R${g + best + 1} with the next record of its run.` : `Written out. Run ${g + best + 1} is exhausted.`, rows2(-1), { pass });
+      }
+      newRuns.push(out);
+      P('wrun', `Merged ${group.length} runs into one run of ${out.length} records.`, rows2(-1), { pass });
+    }
+    runs = newRuns;
+  }
+  P('done', `Sorted in ${pass + 1} passes over the data (1 run formation + ${pass} merge). Total I/O = ${S.wr} record transfers.`,
+    [{ label: 'Sorted file', cells: runs[0].map(v => ({ v, cls: 'sorted' })) }], { passes: pass + 1 });
+  return F;
+}
+
+/* ============ Algorithm registry ============ */
+const ALGOS = {
+  insertion: {
+    name: 'Insertion sort', type: 'int', maxN: 30, defN: 12, run: insertionRun,
+    blurb: 'Build a sorted prefix one element at a time by sliding each new key left past every larger key, the way you sort a hand of cards.',
+    code: [['head', 'InsertionSort(A, n)'], ['for', '  for i ← 1 to n − 1'], ['key', '    key ← A[i]'], ['j', '    j ← i − 1'], ['while', '    while j ≥ 0 and A[j] > key'], ['shift', '      A[j + 1] ← A[j]'], ['dec', '      j ← j − 1'], ['place', '    A[j + 1] ← key'], ['done', '  return A']],
+    legend: [['key', 'key being inserted'], ['cmp', 'compared with key'], ['swap', 'shifted right'], ['done', 'sorted prefix'], ['sorted', 'key placed']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Best', 'Θ(n)', 'Already sorted: the while-test fails at once, n − 1 comparisons.'],
+      ['Average', 'Θ(n²)', 'Random order: about n²/4 comparisons and shifts.'],
+      ['Worst', 'Θ(n²)', 'Reverse sorted: iteration i makes i comparisons, Σ i = n(n−1)/2.']])}
+      ${props({ 'Extra space': 'O(1)', Stable: 'Yes', 'In place': 'Yes', Adaptive: 'Yes', Online: 'Yes' })}
+      <h3>Why: counting inversions</h3>
+      <p>An <i>inversion</i> is a pair of positions i &lt; j with A[i] &gt; A[j]. Every shift in line 5 swaps one adjacent out-of-order pair, which removes exactly one inversion and creates none. So if the input has I inversions, insertion sort performs exactly I shifts and at most I + (n − 1) comparisons, giving running time <b>Θ(n + I)</b>.</p>
+      <ul><li>Sorted input has I = 0, so time is Θ(n).</li>
+      <li>Reversed input has every pair inverted, I = n(n − 1)/2, so time is Θ(n²).</li>
+      <li>In a random permutation each pair is inverted with probability ½, so E[I] = n(n − 1)/4 and the average is still Θ(n²).</li></ul>
+      <h3>Correctness (loop invariant)</h3>
+      <p>At the start of each iteration of the outer loop, A[0..i−1] holds the original first i elements in sorted order. Inserting key into its place keeps the invariant for i + 1; at termination i = n so the whole array is sorted.</p>
+      <h3>In practice</h3>
+      <p>Because its constant factors are tiny and it thrives on nearly sorted data, insertion sort is the fastest choice for small arrays (roughly n ≤ 16). Timsort and introsort both hand small sub-arrays to it. Try the “Already sorted” and “Nearly sorted” inputs to see the comparison counter stay close to n.</p>`
+  },
+  selection: {
+    name: 'Selection sort', type: 'int', maxN: 30, defN: 12, run: selectionRun, labels: ['Comparisons', 'Swaps'],
+    blurb: 'Repeatedly scan the unsorted part for its minimum and swap it into the next position of the sorted prefix.',
+    code: [['head', 'SelectionSort(A, n)'], ['for', '  for i ← 0 to n − 2'], ['min', '    min ← i'], ['inner', '    for j ← i + 1 to n − 1'], ['if', '      if A[j] < A[min]'], ['upd', '        min ← j'], ['swap', '    swap A[i] ↔ A[min]'], ['done', '  return A']],
+    legend: [['key', 'position i'], ['min', 'current minimum'], ['cmp', 'being scanned'], ['swap', 'swapped'], ['sorted', 'final position']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Best', 'Θ(n²)', 'Even on sorted input every pass scans the whole unsorted part.'],
+      ['Average', 'Θ(n²)', 'Same number of comparisons for every input.'],
+      ['Worst', 'Θ(n²)', 'Exactly n(n−1)/2 comparisons, at most n − 1 swaps.']])}
+      ${props({ 'Extra space': 'O(1)', Stable: 'No (swap version)', 'In place': 'Yes', Adaptive: 'No', Swaps: 'Θ(n)' })}
+      <h3>Why</h3>
+      <p>Pass i compares A[min] against each of the n − 1 − i remaining elements, so the total is Σ<sub>i=0</sub><sup>n−2</sup>(n − 1 − i) = n(n − 1)/2 comparisons, <b>independent of the input</b>. Each pass performs at most one swap, so there are at most n − 1 swaps. That makes it attractive only when writes are far more expensive than reads.</p>
+      <h3>Not stable</h3>
+      <p>The long-distance swap can jump an element over an equal one. For [5<sub>a</sub>, 5<sub>b</sub>, 2], the first pass swaps 5<sub>a</sub> with 2, giving [2, 5<sub>b</sub>, 5<sub>a</sub>].</p>
+      <h3>Invariant and relatives</h3>
+      <p>After pass i, A[0..i] contains the i + 1 smallest elements in order. <b>Heapsort</b> is selection sort with a heap to find the extreme element in O(log n) instead of O(n), which brings the total to Θ(n log n).</p>`
+  },
+  bubble: {
+    name: 'Bubble sort', type: 'int', maxN: 30, defN: 12, run: bubbleRun, labels: ['Comparisons', 'Swaps'],
+    blurb: 'Sweep through the array swapping adjacent out-of-order pairs. After each pass the largest remaining element has bubbled to the end.',
+    code: [['head', 'BubbleSort(A, n)'], ['for', '  for i ← 0 to n − 2'], ['flag', '    swapped ← false'], ['inner', '    for j ← 0 to n − 2 − i'], ['if', '      if A[j] > A[j + 1]'], ['swap', '        swap A[j] ↔ A[j + 1];  swapped ← true'], ['brk', '    if not swapped then break'], ['done', '  return A']],
+    legend: [['cmp', 'compared pair'], ['swap', 'swapped'], ['sorted', 'final position']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Best', 'Θ(n)', 'Already sorted: one pass with no swaps, then the flag stops it (without the flag it is Θ(n²)).'],
+      ['Average', 'Θ(n²)', 'About n²/4 swaps.'],
+      ['Worst', 'Θ(n²)', 'Reverse sorted: n(n−1)/2 comparisons and n(n−1)/2 swaps.']])}
+      ${props({ 'Extra space': 'O(1)', Stable: 'Yes', 'In place': 'Yes', Adaptive: 'With early-exit flag' })}
+      <h3>Why</h3>
+      <p>Pass i compares n − 1 − i adjacent pairs, so at most Σ(n − 1 − i) = n(n − 1)/2 comparisons. Every swap exchanges an adjacent inverted pair, removing exactly one inversion, so the number of swaps equals the number of inversions I (0 to n(n−1)/2, average n(n−1)/4).</p>
+      <h3>Invariant</h3>
+      <p>After pass i, the last i elements are the i largest, in final order. This is why the inner loop shrinks by one each pass.</p>
+      <h3>Weaknesses</h3>
+      <p>Large values (“rabbits”) move quickly to the end, but small values near the end (“turtles”) move left only one position per pass. Cocktail-shaker sort alternates direction to help, but bubble sort remains mostly a teaching tool; insertion sort does the same Θ(n + I) work with fewer writes.</p>`
+  },
+  merge: {
+    name: 'Merge sort', type: 'int', maxN: 24, defN: 10, run: mergeRun,
+    blurb: 'Divide the array in half, sort each half recursively, then merge the two sorted halves in linear time.',
+    code: [['head', 'MergeSort(A, l, r)'], ['base', '  if l ≥ r then return'], ['mid', '  m ← ⌊(l + r) / 2⌋'], ['recL', '  MergeSort(A, l, m)'], ['recR', '  MergeSort(A, m + 1, r)'], ['callM', '  Merge(A, l, m, r)'], ['', ''], ['mhead', 'Merge(A, l, m, r)'], ['copy', '  L ← A[l..m];  R ← A[m+1..r]'], ['init', '  i ← 0;  j ← 0;  k ← l'], ['while', '  while i < |L| and j < |R|'], ['takeL', '    if L[i] ≤ R[j]: A[k] ← L[i]; i ← i + 1'], ['takeR', '    else:        A[k] ← R[j]; j ← j + 1'], ['inck', '    k ← k + 1'], ['rest', '  copy leftovers of L or R into A']],
+    legend: [['swap', 'just written'], ['done', 'sorted / merged'], ['stale', 'old value (already copied to L, R)'], ['dim', 'outside current call'], ['cmp', 'heads being compared'], ['used', 'consumed from L or R']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Best', 'Θ(n log n)', 'Merging still touches every element at every level.'],
+      ['Average', 'Θ(n log n)', ''],
+      ['Worst', 'Θ(n log n)', 'At most n⌈lg n⌉ − 2<sup>⌈lg n⌉</sup> + 1 comparisons.']])}
+      ${props({ 'Extra space': 'Θ(n) + Θ(log n) stack', Stable: 'Yes (ties from L)', 'In place': 'No', Adaptive: 'No (basic version)' })}
+      <h3>Recurrence</h3>
+      <p>Dividing is O(1), the two recursive calls cost 2T(n/2), and merging p + q elements costs Θ(p + q). So</p>
+      <p style="text-align:center"><span class="m">T(n) = 2T(n/2) + Θ(n),  T(1) = Θ(1)</span></p>
+      <p><b>Recursion tree:</b> level d has 2<sup>d</sup> sub-problems of size n/2<sup>d</sup>, each merged in Θ(n/2<sup>d</sup>), so every level costs Θ(n). There are lg n + 1 levels, giving Θ(n lg n).</p>
+      <p><b>Master theorem:</b> a = 2, b = 2, f(n) = Θ(n) = Θ(n<sup>log<sub>b</sub>a</sup>), which is case 2, so T(n) = Θ(n lg n).</p>
+      <h3>Comparisons in a merge</h3>
+      <p>Merging lists of sizes p and q takes between min(p, q) and p + q − 1 comparisons: each comparison outputs one element, and the last element needs none. Summed over the tree this is within about n of the information-theoretic minimum lg(n!), so merge sort is near-optimal in comparisons.</p>
+      <h3>Where it shines</h3>
+      <p>Guaranteed Θ(n log n), stable, and it reads data sequentially. That makes it the standard choice for linked lists (O(1) extra space), for sorting data on disk (see External sort), and for parallel sorting. Its cost is the Θ(n) auxiliary buffer.</p>`
+  },
+  quick: {
+    name: 'Randomized quicksort', type: 'int', maxN: 30, defN: 12, run: quickRun, rerun: true,
+    blurb: 'Pick a pivot uniformly at random, partition around it so smaller keys go left and larger go right, then recurse on each side.',
+    code: [['head', 'RandQuickSort(A, p, r)'], ['if', '  if p < r'], ['part', '    q ← RandPartition(A, p, r)'], ['recL', '    RandQuickSort(A, p, q − 1)'], ['recR', '    RandQuickSort(A, q + 1, r)'], ['', ''], ['phead', 'RandPartition(A, p, r)'], ['rand', '  k ← Random(p, r);  swap A[k] ↔ A[r]'], ['x', '  x ← A[r];  i ← p − 1'], ['for', '  for j ← p to r − 1'], ['if2', '    if A[j] ≤ x'], ['sw', '      i ← i + 1;  swap A[i] ↔ A[j]'], ['fin', '  swap A[i + 1] ↔ A[r]'], ['ret', '  return i + 1']],
+    legend: [['pivot', 'pivot x'], ['cmp', 'A[j] being tested'], ['low', '≤ x region'], ['high', '> x region'], ['swap', 'swapped'], ['sorted', 'pivot in final place'], ['dim', 'outside current call']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Best', 'Θ(n log n)', 'Every pivot splits its range in half: T(n) = 2T(n/2) + Θ(n).'],
+      ['Expected', 'Θ(n log n)', 'For every input, averaged over the random pivot choices: about 1.39 n lg n comparisons.'],
+      ['Worst', 'Θ(n²)', 'Every pivot is the min or max: T(n) = T(n − 1) + Θ(n). With random pivots the chance is about 2<sup>n−1</sup>/n!.']])}
+      ${props({ 'Extra space': 'O(log n) expected stack', Stable: 'No', 'In place': 'Yes', Adaptive: 'No' })}
+      <h3>Partition invariant (Lomuto)</h3>
+      <p>During the loop, A[p..i] ≤ x, A[i+1..j−1] &gt; x, and A[r] = x. Each step extends one of the two regions, so partition does exactly r − p comparisons, Θ(n). The final swap puts x between the regions, which is its sorted position.</p>
+      <h3>Expected comparisons: the indicator-variable proof</h3>
+      <p>Let z<sub>1</sub> &lt; z<sub>2</sub> &lt; … &lt; z<sub>n</sub> be the keys in sorted order. Two keys are compared only when one of them is the pivot, and afterwards they are never compared again. Look at the set Z<sub>ij</sub> = {z<sub>i</sub>, …, z<sub>j</sub>}: until some pivot from Z<sub>ij</sub> is chosen, they all stay together. If the first pivot from Z<sub>ij</sub> is z<sub>i</sub> or z<sub>j</sub>, the pair is compared; if it is anything in between, they are separated forever. Since every element of Z<sub>ij</sub> is equally likely to be first,</p>
+      <p style="text-align:center"><span class="m">Pr[z<sub>i</sub> compared with z<sub>j</sub>] = 2 / (j − i + 1)</span></p>
+      <p>By linearity of expectation,</p>
+      <p style="text-align:center"><span class="m">E[X] = Σ<sub>i&lt;j</sub> 2/(j−i+1) &lt; Σ<sub>i=1</sub><sup>n</sup> Σ<sub>k=1</sub><sup>n</sup> 2/k = 2n·H<sub>n</sub> ≈ 2n ln n ≈ 1.39 n lg n</span></p>
+      <h3>Why randomize?</h3>
+      <p>Deterministic quicksort that always picks the last element is Θ(n²) on already-sorted input, a very common case. With a random pivot the Θ(n log n) bound holds <i>in expectation for every input</i>: there is no bad input, only unlucky coin flips. Try “Already sorted”, then press “Re-roll pivots” a few times to see the count stay near n lg n.</p>
+      <p>Even a consistently lopsided 1 : 9 split gives recursion depth log<sub>10/9</sub> n = Θ(log n), so the time is still Θ(n log n). Only splits that are almost always extreme cause quadratic time.</p>
+      <h3>Practical notes</h3>
+      <ul><li><b>Duplicates.</b> With many equal keys (try “Few unique values”) Lomuto piles them on one side and degrades toward Θ(n²). Three-way (Dutch national flag) partitioning fixes this.</li>
+      <li><b>Stack depth.</b> Recurse on the smaller side and loop on the larger to guarantee O(log n) stack.</li>
+      <li><b>Speed.</b> Excellent cache behaviour and small constants make it the fastest general-purpose comparison sort in practice; introsort falls back to heapsort if recursion gets too deep.</li></ul>`
+  },
+  counting: {
+    name: 'Counting sort', type: 'digit', maxN: 20, defN: 12, run: countingRun,
+    blurb: 'For integer keys in a small range 0..k, count how many times each value appears, turn counts into positions, and place each key directly.',
+    code: [['head', 'CountingSort(A, n, k)'], ['init', '  C[0..k] ← 0'], ['count', '  for j ← 0 to n − 1:  C[A[j]] ← C[A[j]] + 1'], ['prefix', '  for i ← 1 to k:  C[i] ← C[i] + C[i − 1]'], ['back', '  for j ← n − 1 downto 0'], ['place', '    B[C[A[j]] − 1] ← A[j]'], ['dec', '    C[A[j]] ← C[A[j]] − 1'], ['ret', '  return B']],
+    legend: [['cmp', 'being read / counted'], ['swap', 'being placed'], ['sorted', 'filled output slot'], ['empty', 'empty slot']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Best', 'Θ(n + k)', ''],
+      ['Average', 'Θ(n + k)', ''],
+      ['Worst', 'Θ(n + k)', 'Linear whenever k = O(n).']])}
+      ${props({ 'Extra space': 'Θ(n + k)', Stable: 'Yes', 'In place': 'No', 'Key comparisons': '0' })}
+      <h3>Why</h3>
+      <p>Four simple loops: zeroing C costs Θ(k), counting costs Θ(n), prefix sums cost Θ(k), and placing costs Θ(n). Total <b>Θ(n + k)</b>. After the prefix pass, C[v] is the number of keys ≤ v, which is exactly one past the last output position for value v.</p>
+      <h3>How it beats Ω(n log n)</h3>
+      <p>The lower bound applies only to algorithms that learn about the input by comparing keys. Counting sort never compares two keys; it uses the key itself as an array index. That extra power (random access by key value) is what allows linear time. Watch the comparison counter stay at 0.</p>
+      <h3>Why the last loop runs right-to-left</h3>
+      <p>Scanning backwards places the <i>last</i> copy of each value into the <i>last</i> slot reserved for it, so equal keys keep their original relative order. This stability is exactly what radix sort relies on.</p>
+      <h3>Limits</h3>
+      <p>If the key range k is much larger than n (for example arbitrary 32-bit integers), the Θ(k) array dominates. That is where radix sort comes in.</p>`
+  },
+  radix: {
+    name: 'Radix sort (LSD)', type: 'radix', maxN: 16, defN: 10, run: radixRun,
+    blurb: 'Sort d-digit numbers one digit at a time, least significant digit first, using a stable distribution pass for each digit.',
+    code: [['head', 'RadixSort(A, n, d)      // base b = 10'], ['pass', '  for pos ← 0 to d − 1       // ones, tens, …'], ['empty', '    bucket[0..9] ← empty lists'], ['scan', '    for each x in A (left to right)'], ['put', '      append x to bucket[digit(x, pos)]'], ['cat', '    A ← bucket[0] ⧺ bucket[1] ⧺ … ⧺ bucket[9]'], ['ret', '  return A']],
+    legend: [['cmp', 'being distributed'], ['sorted', 'after concatenation'], ['', 'underlined = current digit']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['All cases', 'Θ(d(n + b))', 'd passes, each a stable counting/bucket pass over n keys with b = base buckets.'],
+      ['d constant, b = O(n)', 'Θ(n)', 'e.g. 3-digit decimals, or 32-bit ints in base 2<sup>16</sup> (2 passes).']])}
+      ${props({ 'Extra space': 'Θ(n + b)', Stable: 'Yes', 'In place': 'No', 'Key comparisons': '0' })}
+      <h3>Correctness (induction on digits)</h3>
+      <p>Claim: after pass pos, A is sorted by the last pos + 1 digits. For two numbers that differ in the current digit, the pass puts them in the right order. For two numbers with the same current digit, the pass is stable, so it keeps the order from the previous pass, which by induction is correct on the lower digits. This is why the inner sort <b>must</b> be stable, and why we start from the least significant digit.</p>
+      <h3>Choosing the base</h3>
+      <p>For n keys of w bits, split each key into digits of r bits (b = 2<sup>r</sup>, d = ⌈w/r⌉). Time is Θ((w/r)(n + 2<sup>r</sup>)). Choosing r ≈ lg n balances the terms and gives Θ(w·n / lg n); if keys are at most polynomial in n (w = O(lg n)), that is <b>Θ(n)</b>.</p>
+      <h3>Variants</h3>
+      <p>MSD radix sort starts at the most significant digit and recurses into each bucket, which suits strings and can stop early. LSD is simpler and ideal for fixed-width integers.</p>`
+  },
+  bucket: {
+    name: 'Bucket sort', type: 'unit', maxN: 14, defN: 10, run: bucketRun,
+    blurb: 'For keys spread uniformly over [0, 1), drop each key into one of n equal-width buckets, sort each tiny bucket, and read them out in order.',
+    code: [['head', 'BucketSort(A, n)        // A[i] ∈ [0, 1)'], ['make', '  create n empty buckets B[0..n − 1]'], ['put', '  for each x in A:  append x to B[⌊n · x⌋]'], ['sort', '  for i ← 0 to n − 1:  InsertionSort(B[i])'], ['cat', '  A ← B[0] ⧺ B[1] ⧺ … ⧺ B[n − 1]']],
+    legend: [['cmp', 'being distributed'], ['sorted', 'bucket just sorted'], ['used', 'copied to output']],
+    analysis: `<h3>Complexity</h3>${table([
+      ['Expected', 'Θ(n)', 'Keys independent and uniform on [0, 1).'],
+      ['Worst', 'Θ(n²)', 'All keys land in one bucket (insertion sort on n items). Using merge sort inside buckets caps this at Θ(n log n).']])}
+      ${props({ 'Extra space': 'Θ(n)', Stable: 'If the bucket sort is stable', 'In place': 'No' })}
+      <h3>Expected-time proof</h3>
+      <p>Let n<sub>i</sub> be the size of bucket i. Distribution and concatenation cost Θ(n); insertion-sorting bucket i costs O(n<sub>i</sub><sup>2</sup>). So</p>
+      <p style="text-align:center"><span class="m">T(n) = Θ(n) + Σ<sub>i</sub> O(n<sub>i</sub><sup>2</sup>)</span></p>
+      <p>Each key lands in bucket i with probability 1/n, so n<sub>i</sub> is Binomial(n, 1/n) with mean 1 and variance 1 − 1/n. Therefore E[n<sub>i</sub><sup>2</sup>] = Var + (E)<sup>2</sup> = 2 − 1/n, and</p>
+      <p style="text-align:center"><span class="m">E[T(n)] = Θ(n) + n · O(2 − 1/n) = Θ(n)</span></p>
+      <p>The argument only needs Σ E[n<sub>i</sub><sup>2</sup>] to be linear in n, so bucket sort stays linear for any input distribution whose buckets are balanced in that sense. Try “Few unique values” to break the uniformity assumption and watch buckets overflow.</p>`
+  },
+  external: {
+    name: 'External merge sort', type: 'ext', maxN: 30, defN: 18, run: externalRun, labels: ['Comparisons', 'Disk I/Os'], ext: true,
+    blurb: 'Sort a file too large for memory: first create memory-sized sorted runs, then repeatedly merge many runs at once until one remains.',
+    code: [['head', 'ExternalMergeSort(file, N, M)'], ['p1', '  // Phase 1: run formation'], ['read', '  while input not exhausted: read next M records'], ['sort', '    sort them in memory'], ['write', '    write them to disk as a sorted run'], ['p2', '  // Phase 2: k-way merge, k = M − 1'], ['while', '  while #runs > 1'], ['group', '    for each group of k runs'], ['load', '      load the head of each run into an input buffer'], ['emit', '      repeat: move min head → output; refill buffer'], ['wrun', '      flush the output as one merged run'], ['done', '  return the single remaining run']],
+    legend: [['key', 'in memory / next to read'], ['cmp', 'chosen minimum'], ['swap', 'output buffer'], ['sorted', 'sorted run on disk'], ['used', 'already consumed'], ['empty', 'free slot']],
+    analysis: `<h3>The cost model changes</h3>
+      <p>When data lives on disk, one block transfer costs as much as hundreds of thousands of in-memory comparisons. So we count <b>I/Os</b> (block reads and writes), not comparisons. In the simulation one record stands for one block.</p>
+      <h3>Analysis</h3>
+      <p>Let N be the file size and M the memory size, both in blocks.</p>
+      <ul><li><b>Run formation</b> reads and writes every block once (2N I/Os) and produces ⌈N/M⌉ sorted runs.</li>
+      <li><b>Each merge pass</b> uses k = M − 1 input buffers and 1 output buffer, divides the number of runs by k, and again reads and writes every block once (2N I/Os).</li>
+      <li>So the number of passes is <span class="m">1 + ⌈log<sub>M−1</sub> ⌈N/M⌉⌉</span> and the total cost is</li></ul>
+      <p style="text-align:center"><span class="m">I/O = 2N · (1 + ⌈log<sub>M−1</sub> ⌈N/M⌉⌉)</span></p>
+      <p>CPU work: choosing the minimum of k buffer heads with a min-heap costs O(log k) per record, O(N log N) overall. (The simulation scans the heads linearly for clarity.)</p>
+      <div class="calc" id="extCalc">
+        <label>File size N (blocks)<input type="number" id="eN" value="1000000" min="1"></label>
+        <label>Memory M (blocks)<input type="number" id="eM" value="1000" min="3"></label>
+        <div class="out" id="eOut"></div>
+      </div>
+      <h3>Optimality</h3>
+      <p>With block size B, Aggarwal and Vitter (1988) proved any external sort needs Θ((N/B) · log<sub>M/B</sub>(N/B)) block I/Os, where N and M are now counted in records. Multi-way merge sort with fan-in Θ(M/B) meets that bound, so it is asymptotically optimal. Because the logarithm base is huge, real files almost always sort in just two or three passes.</p>
+      <h3>Practical refinements</h3>
+      <ul><li><b>Replacement selection</b> (a heap during run formation) produces runs of expected length 2M, halving the number of runs.</li>
+      <li><b>Double buffering</b> overlaps reading the next block with processing the current one.</li>
+      <li><b>Larger fan-in vs. larger buffers:</b> bigger buffers mean fewer seeks, bigger fan-in means fewer passes; systems tune the balance.</li>
+      <li><b>Polyphase merge</b> was designed for tape drives, where only sequential access is possible.</li></ul>`
+  }
+};
+
+/* ============ Static pages ============ */
+const OVERVIEW = () => `
+<div class="phead"><h2>Sorting algorithms at a glance</h2><p>Pick any algorithm on the left to step through it with live pseudocode. This table collects the results you will derive along the way.</p></div>
+<div class="card"><div class="tw"><table>
+<tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Extra space</th><th>Stable</th><th>Model</th></tr>
+<tr><td>Insertion</td><td>Θ(n)</td><td>Θ(n²)</td><td>Θ(n²)</td><td>O(1)</td><td>Yes</td><td>Comparison</td></tr>
+<tr><td>Selection</td><td>Θ(n²)</td><td>Θ(n²)</td><td>Θ(n²)</td><td>O(1)</td><td>No</td><td>Comparison</td></tr>
+<tr><td>Bubble (early exit)</td><td>Θ(n)</td><td>Θ(n²)</td><td>Θ(n²)</td><td>O(1)</td><td>Yes</td><td>Comparison</td></tr>
+<tr><td>Merge</td><td>Θ(n log n)</td><td>Θ(n log n)</td><td>Θ(n log n)</td><td>Θ(n)</td><td>Yes</td><td>Comparison</td></tr>
+<tr><td>Randomized quick</td><td>Θ(n log n)</td><td>Θ(n log n) expected</td><td>Θ(n²)</td><td>O(log n) expected</td><td>No</td><td>Comparison</td></tr>
+<tr><td>Counting</td><td>Θ(n + k)</td><td>Θ(n + k)</td><td>Θ(n + k)</td><td>Θ(n + k)</td><td>Yes</td><td>Integer keys 0..k</td></tr>
+<tr><td>Radix (LSD)</td><td>Θ(d(n + b))</td><td>Θ(d(n + b))</td><td>Θ(d(n + b))</td><td>Θ(n + b)</td><td>Yes</td><td>d-digit keys, base b</td></tr>
+<tr><td>Bucket</td><td>Θ(n)</td><td>Θ(n) expected</td><td>Θ(n²)</td><td>Θ(n)</td><td>Yes*</td><td>Uniform keys in [0, 1)</td></tr>
+<tr><td>External merge</td><td colspan="3">2N(1 + ⌈log<sub>M−1</sub>⌈N/M⌉⌉) block I/Os</td><td>M blocks of RAM</td><td>Yes</td><td>Disk (I/O model)</td></tr>
+</table></div>
+<div class="prose">
+<p><b>Comparison lower bound:</b> every algorithm that only compares keys needs Ω(n log n) comparisons in the worst case and on average, so merge sort and randomized quicksort are asymptotically optimal. Counting, radix and bucket sort get around the bound by using key values as addresses. See <i>Lower bounds</i> for the decision-tree proof.</p>
+<p>* Bucket sort is stable if each bucket is sorted with a stable algorithm such as insertion sort.</p>
+<h3>Choosing in practice</h3>
+<ul><li>Tiny or nearly sorted arrays: insertion sort.</li>
+<li>General in-memory sorting: quicksort variants (introsort, pdqsort) for speed; merge-based Timsort when stability matters.</li>
+<li>Integers or fixed-width keys at scale: radix sort.</li>
+<li>Data larger than memory: external multi-way merge sort.</li>
+<li>Writes are extremely expensive: selection sort's Θ(n) swaps.</li></ul>
+<h3>Things to try in the simulations</h3>
+<ul><li>Insertion and bubble on “Already sorted”, then on “Reversed”, and compare the counters.</li>
+<li>Selection on any input: the comparison count never changes.</li>
+<li>Quicksort on “Few unique values” to see why duplicate handling matters.</li>
+<li>Bucket sort on “Few unique values” to break the uniform-input assumption.</li>
+<li>External sort with M = 3 versus M = 6: bigger memory means more runs merged at once and fewer passes.</li></ul>
+</div></div>`;
+
+const LOWER = () => `
+<div class="phead"><h2>Lower bounds for sorting</h2><p>Why no comparison-based sort can beat Ω(n log n), and how distribution sorts escape the bound.</p></div>
+<div class="card"><div class="prose">
+<h3>The comparison model</h3>
+<p>A comparison sort learns about the input only by asking questions of the form “is a<sub>i</sub> ≤ a<sub>j</sub>?”. Insertion, selection, bubble, merge, quick and heap sort all fit this model. Any such algorithm, for a fixed n, can be drawn as a <b>decision tree</b>: each internal node is a comparison, each edge an outcome, and each leaf a permutation that describes the sorted order. Running the algorithm on an input traces one root-to-leaf path; the path length is the number of comparisons.</p>
+<h3>Try it: the decision tree of insertion sort for n = 3</h3>
+<p>Choose values for a₁, a₂, a₃. The highlighted path shows which comparisons the algorithm makes and which leaf (sorted order) it reaches. A leaf ⟨2, 3, 1⟩ means a₂ ≤ a₃ ≤ a₁.</p>
+</div>
+<div class="calc" id="treeCtl">
+  <label>a₁<input type="number" id="t1" value="7"></label>
+  <label>a₂<input type="number" id="t2" value="2"></label>
+  <label>a₃<input type="number" id="t3" value="5"></label>
+  <button class="btn" id="tShuffle">Random values</button>
+  <div class="out" id="tOut"></div>
+</div>
+<div class="tree" id="tree"></div>
+<div class="prose">
+<h3>The theorem</h3>
+<p><b>Any comparison sort requires Ω(n log n) comparisons in the worst case.</b></p>
+<ol><li>The algorithm must be able to produce every one of the n! orderings, since any of them could be the right answer. So the tree has at least n! reachable leaves.</li>
+<li>A binary tree of height h has at most 2<sup>h</sup> leaves. Therefore 2<sup>h</sup> ≥ n!, that is, h ≥ lg(n!).</li>
+<li>Bound lg(n!): the largest n/2 factors of n! are each at least n/2, so n! ≥ (n/2)<sup>n/2</sup> and lg(n!) ≥ (n/2) lg(n/2) = Ω(n lg n). Stirling's formula gives the sharper lg(n!) = n lg n − n lg e + O(lg n) ≈ n lg n − 1.44n.</li></ol>
+<p>The worst case is the height of the tree, so h = Ω(n lg n). For n = 3 the bound is ⌈lg 6⌉ = 3, and the tree above indeed has height 3.</p>
+<h3>Average case too</h3>
+<p>In any binary tree with L leaves the average leaf depth is at least lg L (a balanced tree minimises it). With n! equally likely inputs the expected number of comparisons is therefore ≥ lg(n!) = Ω(n lg n). The same holds for randomized algorithms: fixing the coin flips gives a deterministic tree, and averaging trees cannot beat the bound. So randomized quicksort's expected 1.39 n lg n is optimal up to a constant.</p>
+<h3>Consequences</h3>
+<ul><li>Merge sort and heapsort (Θ(n lg n) worst case) are asymptotically optimal comparison sorts.</li>
+<li>Merge sort's worst-case count n⌈lg n⌉ − 2<sup>⌈lg n⌉</sup> + 1 is within about 0.09n of ⌈lg n!⌉ for many n, so there is little left to gain.</li>
+<li>Counting, radix and bucket sort are not in this model: they index arrays by key value, which a decision tree of comparisons cannot express. That is how they reach Θ(n).</li>
+<li>Trivially, any sort must read every element: Ω(n). Distribution sorts meet this bound under their assumptions.</li>
+<li>In the external-memory model the matching bound is Θ((N/B) log<sub>M/B</sub>(N/B)) I/Os.</li></ul>
+<h3>Calculator: how close do real algorithms get?</h3>
+</div>
+<div class="calc">
+  <label>n = <b id="cnV">16</b><input type="range" id="cn" min="2" max="64" value="16"></label>
+  <div class="out" id="cOut"></div>
+</div>
+<div class="chart" id="chart"></div>
+</div>`;
+
+/* ============ Navigation ============ */
+const NAV = [
+  ['Start', [['overview', 'Overview']]],
+  ['Comparison sorts', [['insertion', 'Insertion sort'], ['selection', 'Selection sort'], ['bubble', 'Bubble sort'], ['merge', 'Merge sort'], ['quick', 'Randomized quicksort']]],
+  ['Distribution sorts', [['counting', 'Counting sort'], ['radix', 'Radix sort'], ['bucket', 'Bucket sort']]],
+  ['Theory and practice', [['lower', 'Lower bounds'], ['external', 'External sort']]]
+];
+const nav = $('#nav');
+nav.innerHTML = `<h1>Sorting, step by step</h1><p class="sub">Simulations, pseudocode, analysis</p>` +
+  NAV.map(([g, items]) => `<div class="grp">${g}</div>` + items.map(([id, label]) => `<button data-id="${id}">${label}</button>`).join('')).join('') +
+  `<button class="themebtn" id="themeBtn">Toggle light / dark</button>`;
+nav.addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) go(b.dataset.id); });
+$('#themeBtn').onclick = () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', r.dataset.theme); } catch (e) {}
+};
+try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+/* ============ Player ============ */
+const cur = { id: null, algo: null, input: [], frames: [], i: 0, timer: null, maxVal: 1 };
+
+function genInput(type, n, pat) {
+  const R = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const [lo, hi] = { int: [1, 99], digit: [0, 9], radix: [1, 999], unit: [0, 99], ext: [1, 99] }[type];
+  let a;
+  if (pat === 'few') { const pool = [R(lo, hi), R(lo, hi), R(lo, hi)]; a = Array.from({ length: n }, () => pool[R(0, 2)]); }
+  else a = Array.from({ length: n }, () => R(lo, hi));
+  if (pat === 'sorted') a.sort((x, y) => x - y);
+  if (pat === 'reversed') a.sort((x, y) => y - x);
+  if (pat === 'nearly') { a.sort((x, y) => x - y); for (let t = 0; t < Math.max(1, Math.floor(n / 6)); t++) { const i = R(0, n - 2); [a[i], a[i + 1]] = [a[i + 1], a[i]]; } }
+  if (type === 'unit') a = a.map(v => v / 100);
+  return a;
+}
+
+function build() {
+  stop();
+  const A = cur.algo;
+  cur.frames = A.run(cur.input.slice(), { M: +$('#mem').value });
+  cur.i = 0;
+  cur.maxVal = A.type === 'unit' ? 1 : Math.max(1, ...cur.input);
+  $('#scrub').max = cur.frames.length - 1;
+  const bars = $('#bars');
+  bars.classList.toggle('hide', !!A.ext);
+  bars.innerHTML = A.ext ? '' : cur.input.map(() => `<div class="bar"><span class="v"></span></div>`).join('');
+  render();
+}
+
+function render() {
+  const f = cur.frames[cur.i], A = cur.algo;
+  if (!A.ext && f.a) {
+    const bars = $('#bars').children, showV = f.a.length <= 30;
+    f.a.forEach((v, t) => {
+      const b = bars[t]; if (!b) return;
+      b.style.height = Math.max(3, (v / cur.maxVal) * 100) + '%';
+      let cls = f.st && f.st[t] ? f.st[t] : '';
+      if (f.range && (t < f.range[0] || t > f.range[1])) cls += ' dim';
+      b.className = 'bar ' + cls;
+      b.firstChild.textContent = showV ? fmt(v) : '';
+    });
+  }
+  renderAux(f.aux);
+  $('#msg').textContent = f.msg || '';
+  $('#code').querySelectorAll('.ln').forEach(el => el.classList.toggle('on', !!f.line && el.dataset.tag === f.line));
+  $('#vars').innerHTML = Object.entries(f.vars || {}).map(([k, v]) => `<span class="chip">${esc(k)} = ${esc(v)}</span>`).join('');
+  $('#s1').textContent = f.cmp; $('#s2').textContent = f.wr;
+  $('#s3').textContent = `${cur.i} / ${cur.frames.length - 1}`;
+  $('#scrub').value = cur.i;
+}
+
+function cellH(c) {
+  const ix = c.idx !== undefined;
+  return `<div class="cell ${c.cls || ''}${ix ? ' hasix' : ''}">${c.h !== undefined ? c.h : esc(fmt(c.v))}${ix ? `<i class="ix">${c.idx}</i>` : ''}</div>`;
+}
+function renderAux(rows) {
+  const aux = $('#aux');
+  if (!rows || !rows.length) { aux.innerHTML = ''; return; }
+  aux.innerHTML = rows.map(r => {
+    if (r.type === 'buckets') return `<div class="bk" style="--nb:${r.buckets.length}">` + r.buckets.map((b, i) => `<div class="bucket"><div class="bl">${r.labels[i]}${r.sub ? `<small>${r.sub[i]}</small>` : ''}</div>${b.map(cellH).join('')}</div>`).join('') + '</div>';
+    return `<div class="row"><div class="rl">${r.label}</div><div class="cells">${r.cells.map(cellH).join('')}</div></div>`;
+  }).join('');
+}
+
+const delay = () => [1400, 1000, 750, 550, 400, 280, 180, 110, 60, 25][+$('#speed').value - 1];
+function play() {
+  if (cur.i >= cur.frames.length - 1) cur.i = 0;
+  $('#bPlay').textContent = '⏸ Pause';
+  const tick = () => {
+    if (cur.i >= cur.frames.length - 1) { stop(); return; }
+    cur.i++; render();
+    cur.timer = setTimeout(tick, delay());
+  };
+  cur.timer = setTimeout(tick, 0);
+}
+function stop() { clearTimeout(cur.timer); cur.timer = null; $('#bPlay').textContent = '▶ Play'; }
+const toggle = () => cur.timer ? stop() : play();
+const step = d => { stop(); cur.i = Math.min(cur.frames.length - 1, Math.max(0, cur.i + d)); render(); };
+
+$('#bPlay').onclick = toggle;
+$('#bFwd').onclick = () => step(1);
+$('#bBack').onclick = () => step(-1);
+$('#bStart').onclick = () => { stop(); cur.i = 0; render(); };
+$('#bEnd').onclick = () => { stop(); cur.i = cur.frames.length - 1; render(); };
+$('#scrub').oninput = e => { stop(); cur.i = +e.target.value; render(); };
+$('#size').oninput = e => { $('#sizeV').textContent = e.target.value; newInput(); };
+$('#mem').oninput = e => { $('#memV').textContent = e.target.value; build(); };
+$('#pattern').onchange = newInput;
+$('#newBtn').onclick = newInput;
+$('#rerunBtn').onclick = build;
+$('#applyBtn').onclick = applyCustom;
+$('#custom').addEventListener('keydown', e => { if (e.key === 'Enter') applyCustom(); });
+document.addEventListener('keydown', e => {
+  if ($('#player').hidden || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if (e.key === ' ') { e.preventDefault(); toggle(); }
+  else if (e.key === 'ArrowRight') step(1);
+  else if (e.key === 'ArrowLeft') step(-1);
+  else if (e.key === 'Home') { stop(); cur.i = 0; render(); }
+  else if (e.key === 'End') { stop(); cur.i = cur.frames.length - 1; render(); }
+});
+
+function newInput() {
+  $('#err').hidden = true;
+  cur.input = genInput(cur.algo.type, +$('#size').value, $('#pattern').value);
+  build();
+}
+function applyCustom() {
+  const A = cur.algo, err = $('#err');
+  const raw = $('#custom').value.trim();
+  const vals = raw.split(/[\s,]+/).filter(Boolean).map(Number);
+  const fail = m => { err.textContent = m; err.hidden = false; };
+  if (vals.length < 2) return fail('Enter at least two numbers separated by spaces or commas.');
+  if (vals.length > A.maxN) return fail(`Use at most ${A.maxN} numbers for this simulation.`);
+  if (vals.some(v => !Number.isFinite(v))) return fail('Only numbers are allowed.');
+  if (A.type === 'unit') { if (vals.some(v => v < 0 || v >= 1)) return fail('Bucket sort expects values in [0, 1), for example 0.42 0.07 0.91.'); }
+  else {
+    if (vals.some(v => !Number.isInteger(v) || v < 0)) return fail('Use non-negative whole numbers.');
+    if (A.type === 'digit' && Math.max(...vals) > 20) return fail('Counting sort here needs keys in 0..20 so the count array stays readable.');
+    if (A.type === 'radix' && Math.max(...vals) > 9999) return fail('Radix sort here supports keys up to 9999.');
+    if (A.type !== 'digit' && A.type !== 'radix' && Math.max(...vals) > 999) return fail('Use values up to 999.');
+  }
+  err.hidden = true;
+  cur.input = vals;
+  build();
+}
+
+/* ============ Page routing ============ */
+function go(id) {
+  stop();
+  nav.querySelectorAll('button[data-id]').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  cur.id = id;
+  if (id === 'overview' || id === 'lower') {
+    $('#player').hidden = true;
+    const s = $('#static'); s.hidden = false;
+    s.innerHTML = id === 'overview' ? OVERVIEW() : LOWER();
+    if (id === 'lower') initLower();
+    window.scrollTo(0, 0);
+    return;
+  }
+  $('#static').hidden = true; $('#player').hidden = false;
+  const A = ALGOS[id]; cur.algo = A; curType = A.type;
+  $('#pTitle').textContent = A.name; $('#pBlurb').textContent = A.blurb;
+  const size = $('#size'); size.max = A.maxN; size.value = A.defN; $('#sizeV').textContent = A.defN;
+  $('#nLabel').textContent = A.ext ? 'N records' : 'n';
+  $('#memWrap').hidden = !A.ext;
+  $('#rerunBtn').hidden = !A.rerun;
+  $('#custom').placeholder = { int: 'e.g. 34 7 81 12 50', digit: 'e.g. 3 1 4 1 5 9 2 6', radix: 'e.g. 329 457 657 839', unit: 'e.g. .78 .17 .39 .26', ext: 'e.g. 40 12 77 5 63 21' }[A.type];
+  $('#custom').value = ''; $('#err').hidden = true;
+  const [l1, l2] = A.labels || ['Comparisons', 'Writes'];
+  $('#l1').textContent = l1; $('#l2').textContent = l2;
+  let n = 0;
+  $('#code').innerHTML = A.code.map(([tag, txt]) => `<div class="ln" data-tag="${tag}"><span class="n">${txt ? ++n : ''}</span><span>${esc(txt)}</span></div>`).join('');
+  $('#legend').innerHTML = A.legend.map(([c, l]) => `<span>${c ? `<i class="sw ${c}"></i>` : ''}${l}</span>`).join('');
+  $('#analysis').innerHTML = A.analysis;
+  if (A.ext) initExtCalc();
+  newInput();
+  window.scrollTo(0, 0);
+}
+
+/* ============ External calculator ============ */
+function initExtCalc() {
+  const upd = () => {
+    const N = Math.max(1, +$('#eN').value || 1), M = Math.max(3, +$('#eM').value || 3);
+    const runs = Math.ceil(N / M), k = M - 1;
+    let merges = 0, r = runs; while (r > 1) { r = Math.ceil(r / k); merges++; }
+    const passes = 1 + merges;
+    $('#eOut').innerHTML = `Initial runs ⌈N/M⌉ = <b>${runs.toLocaleString()}</b> · fan-in k = M − 1 = <b>${k.toLocaleString()}</b><br>` +
+      `Passes = 1 + ⌈log<sub>${k}</sub> ${runs.toLocaleString()}⌉ = <b>${passes}</b> · Total I/O = 2N × ${passes} = <b>${(2 * N * passes).toLocaleString()}</b> blocks`;
+  };
+  $('#eN').oninput = upd; $('#eM').oninput = upd; upd();
+}
+
+/* ============ Lower-bound page ============ */
+function initLower() {
+  const T = {
+    r: { x: 360, y: 30, t: [1, 2], yes: 'L', no: 'R' },
+    L: { x: 180, y: 110, t: [2, 3], yes: 'LL', no: 'LR' },
+    R: { x: 540, y: 110, t: [1, 3], yes: 'RL', no: 'RR' },
+    LL: { x: 90, y: 190, leaf: '⟨1,2,3⟩' },
+    LR: { x: 270, y: 190, t: [1, 3], yes: 'LRL', no: 'LRR' },
+    RL: { x: 450, y: 190, leaf: '⟨2,1,3⟩' },
+    RR: { x: 630, y: 190, t: [2, 3], yes: 'RRL', no: 'RRR' },
+    LRL: { x: 215, y: 270, leaf: '⟨1,3,2⟩' }, LRR: { x: 325, y: 270, leaf: '⟨3,1,2⟩' },
+    RRL: { x: 575, y: 270, leaf: '⟨2,3,1⟩' }, RRR: { x: 685, y: 270, leaf: '⟨3,2,1⟩' }
+  };
+  const sub = ['', '₁', '₂', '₃'];
+  function draw() {
+    const v = [0, +$('#t1').value, +$('#t2').value, +$('#t3').value];
+    const path = new Set(['r']), edges = new Set(); const steps = [];
+    let id = 'r';
+    while (!T[id].leaf) {
+      const [i, j] = T[id].t, le = v[i] <= v[j];
+      steps.push(`a${sub[i]} : a${sub[j]} → ${v[i]} ${le ? '≤' : '>'} ${v[j]}`);
+      const nx = le ? T[id].yes : T[id].no; edges.add(id + '-' + nx); path.add(nx); id = nx;
+    }
+    const perm = T[id].leaf.slice(1, -1).split(',').map(Number);
+    $('#tOut').innerHTML = steps.join('<br>') + `<br>Leaf ${T[id].leaf}: sorted order is ${perm.map(p => `a${sub[p]} = ${v[p]}`).join(' ≤ ')} after <b>${steps.length}</b> comparisons.`;
+    let s = `<svg viewBox="0 0 720 300" role="img" aria-label="Decision tree for sorting three elements">`;
+    for (const [k, n] of Object.entries(T)) {
+      if (n.leaf) continue;
+      [['yes', '≤'], ['no', '>']].forEach(([b, lab]) => {
+        const c = T[n[b]], on = edges.has(k + '-' + n[b]);
+        s += `<line x1="${n.x}" y1="${n.y + 14}" x2="${c.x}" y2="${c.y - 14}" class="${on ? 'on' : ''}"/>`;
+        s += `<text class="el" x="${(n.x + c.x) / 2 + (b === 'yes' ? -14 : 8)}" y="${(n.y + c.y) / 2 + 2}">${lab}</text>`;
+      });
+    }
+    for (const [k, n] of Object.entries(T)) {
+      const w = n.leaf ? 80 : 84, label = n.leaf ? n.leaf : `a${sub[n.t[0]]} : a${sub[n.t[1]]}`;
+      s += `<g class="nd ${n.leaf ? 'leaf' : ''} ${path.has(k) ? 'on' : ''}"><rect x="${n.x - w / 2}" y="${n.y - 14}" width="${w}" height="28" rx="${n.leaf ? 6 : 14}"/><text x="${n.x}" y="${n.y + 5}" text-anchor="middle">${label}</text></g>`;
+    }
+    s += `</svg>`;
+    $('#tree').innerHTML = s;
+  }
+  ['#t1', '#t2', '#t3'].forEach(q => $(q).oninput = draw);
+  $('#tShuffle').onclick = () => { ['#t1', '#t2', '#t3'].forEach(q => $(q).value = 1 + Math.floor(Math.random() * 99)); draw(); };
+  draw();
+
+  const lgFact = n => { let s = 0; for (let i = 2; i <= n; i++) s += Math.log2(i); return s; };
+  const mergeW = n => { const c = Math.ceil(Math.log2(n)); return n * c - 2 ** c + 1; };
+  const fact = n => { if (n <= 25) { let b = 1n; for (let i = 2n; i <= BigInt(n); i++) b *= i; return b.toLocaleString(); } const l10 = lgFact(n) / Math.log2(10); return (10 ** (l10 % 1)).toFixed(3) + ' × 10^' + Math.floor(l10); };
+  function calc() {
+    const n = +$('#cn').value; $('#cnV').textContent = n;
+    const lf = lgFact(n);
+    $('#cOut').innerHTML = `n! = ${fact(n)}<br>` +
+      `Lower bound ⌈lg n!⌉ = <b>${Math.ceil(lf)}</b> comparisons (worst case, any comparison sort)<br>` +
+      `Merge sort worst case n⌈lg n⌉ − 2<sup>⌈lg n⌉</sup> + 1 = <b>${mergeW(n)}</b><br>` +
+      `n lg n = ${(n * Math.log2(n)).toFixed(1)} · Randomized quicksort expected ≈ 2n ln n = ${(2 * n * Math.log(n)).toFixed(1)}<br>` +
+      `Insertion / selection / bubble worst case n(n−1)/2 = ${n * (n - 1) / 2}`;
+    chart(n);
+  }
+  function chart(mark) {
+    const W = 720, H = 280, pl = 44, pr = 150, pt = 14, pb = 30, N = 64;
+    const series = [
+      ['n(n−1)/2', n => n * (n - 1) / 2, 'var(--swap)'],
+      ['2n ln n (quick, expected)', n => 2 * n * Math.log(n), 'var(--pivot)'],
+      ['merge sort worst', mergeW, 'var(--key)'],
+      ['⌈lg n!⌉ lower bound', n => Math.ceil(lgFact(n)), 'var(--sorted)']
+    ];
+    const ymax = 600;
+    const X = n => pl + (n - 2) / (N - 2) * (W - pl - pr), Y = v => pt + (1 - Math.min(v, ymax) / ymax) * (H - pt - pb);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Comparison counts versus n">`;
+    for (let v = 0; v <= ymax; v += 100) s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
+    for (let n = 8; n <= N; n += 8) s += `<text x="${X(n)}" y="${H - 10}" text-anchor="middle">${n}</text>`;
+    s += `<text x="${W - pr}" y="${H - 10}" text-anchor="start" dx="6">n</text>`;
+    series.forEach(([name, f, col], si) => {
+      let d = '';
+      for (let n = 2; n <= N; n++) { const v = f(n); if (v > ymax && n > 2 && f(n - 1) > ymax) continue; d += (d ? 'L' : 'M') + X(n).toFixed(1) + ',' + Y(v).toFixed(1); }
+      s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.5"/>`;
+      s += `<rect x="${W - pr + 14}" y="${pt + 8 + si * 22}" width="12" height="4" fill="${col}"/><text x="${W - pr + 32}" y="${pt + 13 + si * 22}">${name}</text>`;
+    });
+    s += `<line x1="${X(mark)}" x2="${X(mark)}" y1="${pt}" y2="${H - pb}" stroke="var(--accent)" stroke-dasharray="4 4"/>`;
+    s += `</svg>`;
+    $('#chart').innerHTML = s;
+  }
+  $('#cn').oninput = calc; calc();
+}
+
+go('overview');
+</script>
+</body>
+</html>
