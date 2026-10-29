@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circular Queue Visualization</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%230f6e56%27/%3E%3Crect x=%2718%27 y=%2740%27 width=%2764%27 height=%2720%27 rx=%274%27 fill=%27%23afa9ec%27 opacity=%270.5%27/%3E%3Crect x=%2750%27 y=%2740%27 width=%2732%27 height=%2720%27 rx=%274%27 fill=%27%23e24b4a%27 opacity=%270.35%27/%3E%3Cline x1=%2750%27 y1=%2730%27 x2=%2750%27 y2=%2770%27 stroke=%27%231d9e75%27 stroke-width=%276%27/%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%277%27 fill=%27%231d9e75%27/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#faf9f5; --card:#ffffff; --ink:#2c2c2a; --muted:#5f5e5a; --faint:#888780;
+    --line:#d3d1c7; --line2:#b4b2a9;
+    --front:#185fa5; --front-d:#0c447c; --front-l:#d5e4f5;
+    --rear:#993c1d; --rear-d:#712b13; --rear-l:#f0dcd3;
+    --fill:#0f6e56; --fill-l:#e3f4ee; --fill-m:#c4e9dd;
+    --band:#afa9ec; --cut:#e24b4a; --purple:#534ab7;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6; padding:24px;}
+  .wrap{max-width:1000px; margin:0 auto;}
+  .back{display:inline-block; font-size:14px; color:var(--fill); text-decoration:none; margin-bottom:4px;}
+  .back:hover{text-decoration:underline;}
+  h1{font-size:28px; font-weight:600; text-align:center; margin:8px 0 6px;}
+  .sub{text-align:center; color:var(--muted); font-size:15px; margin:0 0 20px;}
+
+  .controls{display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:16px;}
+  .ctl{display:flex; align-items:center; gap:9px;}
+  .ctl label{font-size:14px; color:var(--muted); white-space:nowrap;}
+  input[type=range]{width:130px; accent-color:var(--fill);}
+  input[type=number]{font-size:14px; padding:6px 10px; border:1px solid var(--line2);
+    border-radius:8px; background:var(--card); color:var(--ink); width:80px;}
+  .val{font-size:17px; font-weight:600; min-width:28px; text-align:center;}
+
+  button{font-size:15px; padding:9px 16px; border:1px solid var(--line2); border-radius:10px;
+    background:var(--card); color:var(--ink); cursor:pointer; transition:background .12s, transform .05s;}
+  button:hover{background:#f1efe8;} button:active{transform:scale(.97);}
+  button.primary{background:var(--fill); color:#fff; border-color:var(--fill);}
+  button.primary:hover{background:#0d5d49;}
+  button.danger{color:var(--rear); border-color:#d8b4a6;}
+  button.danger:hover{background:#faefe9;}
+
+  .stage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 16px 12px; margin-bottom:14px;
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:center;}
+  .stage h3{font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--faint);
+    margin:0 0 6px; text-align:center;}
+  svg text{font-family:inherit;}
+  #ring{width:100%; max-width:440px; display:block; margin:0 auto;}
+
+  /* linear (physical array) view */
+  .arr-wrap{overflow-x:auto; padding:22px 4px 4px;}
+  .arr{display:flex; gap:5px; justify-content:center; min-width:max-content; margin:0 auto;}
+  .cell{position:relative; width:42px; height:46px; display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--line2); border-radius:8px; font-size:16px; font-weight:600; background:var(--card);
+    transition:all .2s;}
+  .cell .idx{position:absolute; top:-19px; left:0; right:0; text-align:center; font-size:11px; font-weight:400; color:var(--faint);}
+  .cell.live{border-color:var(--fill); background:var(--fill-l);}
+  .cell.stale{color:var(--line2); border-style:dashed; font-weight:400;}
+  .cell.flash-in{box-shadow:0 0 0 4px var(--fill-m);}
+  .cell.flash-out{box-shadow:0 0 0 4px #f6d3d2; border-color:var(--cut);}
+  .ptrs{display:flex; gap:5px; justify-content:center; min-width:max-content; margin:6px auto 0;}
+  .ptr{width:42px; text-align:center; font-size:11px; font-weight:600; line-height:1.25; min-height:30px;}
+  .ptr .f{color:var(--front);} .ptr .r{color:var(--rear);}
+
+  .logical{margin-top:18px; text-align:center;}
+  .logical .lbl{font-size:12px; color:var(--faint); margin-bottom:6px;}
+  .chips{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; min-height:30px; align-items:center;}
+  .chip{font-size:14px; font-weight:600; padding:3px 10px; border-radius:8px; background:var(--fill-l); color:var(--fill);}
+  .chip.first{background:var(--front-l); color:var(--front-d);}
+  .chip.last{background:var(--rear-l); color:var(--rear-d);}
+  .chips .arrow{color:var(--faint); font-size:13px;}
+  .chips .none{color:var(--faint); font-size:14px; font-style:italic;}
+
+  .verdict{text-align:center; font-size:16px; color:var(--muted); min-height:26px; margin:10px 0 14px;}
+  .verdict code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:15px;
+    background:#f1efe8; padding:1px 7px; border-radius:6px; color:var(--ink);}
+  .verdict.err{color:var(--cut);}
+  .btns{display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;}
+
+  .cards{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:18px;}
+  .mcard{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px;}
+  .mcard .k{font-size:12px; color:var(--muted); margin-bottom:3px;}
+  .mcard .v{font-size:19px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .mcard .f{font-size:11px; color:var(--faint); margin-top:2px;}
+  .mcard.front .v{color:var(--front);} .mcard.rear .v{color:var(--rear);} .mcard.count .v{color:var(--fill);}
+
+  .lower{display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:14px; margin-top:18px;}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  .panel h3{font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin:0 0 8px;}
+  pre.code{margin:0; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; line-height:1.55;
+    overflow-x:auto;}
+  pre.code .ln{display:block; padding:0 8px; border-radius:5px; border-left:3px solid transparent; transition:background .2s;}
+  pre.code .ln.hl{background:var(--fill-l); border-left-color:var(--fill);}
+  pre.code .ln.hl-err{background:#fbe7e6; border-left-color:var(--cut);}
+  pre.code .c{color:var(--faint);}
+  pre.code .k{color:var(--purple);}
+  ol.log{list-style:none; margin:0; padding:0; font-size:14px; max-height:300px; overflow-y:auto;}
+  ol.log li{padding:5px 0; border-bottom:1px solid #eeece5; display:flex; gap:10px;}
+  ol.log li:last-child{border-bottom:none;}
+  ol.log .op{font-weight:600; min-width:80px;}
+  ol.log .op.enq{color:var(--fill);} ol.log .op.deq{color:var(--front);} ol.log .op.err{color:var(--cut);}
+  ol.log .op.peek{color:var(--purple);}
+  ol.log .empty{color:var(--faint); font-style:italic;}
+
+  .hint{text-align:center; color:var(--faint); font-size:12px; margin-top:16px;}
+
+  @media (max-width:760px){
+    .stage{grid-template-columns:1fr;}
+    .lower{grid-template-columns:1fr;}
+    .cards{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; All visualizations</a>
+  <h1>Circular queue</h1>
+  <p class="sub">A fixed-size array whose end wraps around to the start, so slots freed by <b>dequeue</b> get reused by <b>enqueue</b>.</p>
+
+  <div class="controls">
+    <div class="ctl"><label for="cap">Capacity N</label><input type="range" id="cap" min="3" max="12" value="8" step="1"><span class="val" id="capout">8</span></div>
+    <div class="ctl"><label for="x">Value</label><input type="number" id="x" value="10"></div>
+    <button id="enq" class="primary">enqueue(x)</button>
+    <button id="deq">dequeue()</button>
+    <button id="peek">peek()</button>
+  </div>
+
+  <div class="stage">
+    <div>
+      <h3>Logical view &mdash; the ring</h3>
+      <svg id="ring" viewBox="0 0 480 480" aria-label="Circular queue drawn as a ring of slots"></svg>
+    </div>
+    <div>
+      <h3>Physical view &mdash; the array</h3>
+      <div class="arr-wrap">
+        <div class="arr" id="cells"></div>
+        <div class="ptrs" id="ptrs"></div>
+      </div>
+      <div class="logical">
+        <div class="lbl">queue contents, front &rarr; rear</div>
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict">enqueue a few values, then dequeue some and keep enqueuing to watch <b>rear</b> wrap around</div>
+  <div class="btns">
+    <button id="reset">&#8635; reset</button>
+    <button id="fill">fill randomly</button>
+    <button id="demo">&#9654; wrap-around demo</button>
+  </div>
+
+  <div class="cards">
+    <div class="mcard front"><div class="k">front (index)</div><div class="v" id="cfront">0</div><div class="f" id="ffront">arr[front] = &mdash;</div></div>
+    <div class="mcard rear"><div class="k">rear (index)</div><div class="v" id="crear">-1</div><div class="f" id="frear">arr[rear] = &mdash;</div></div>
+    <div class="mcard count"><div class="k">count</div><div class="v" id="ccount">0</div><div class="f" id="fcount">of N = 8</div></div>
+    <div class="mcard"><div class="k">status</div><div class="v" id="cstatus">empty</div><div class="f">isEmpty: count == 0 &middot; isFull: count == N</div></div>
+  </div>
+
+  <div class="lower">
+    <div class="panel">
+      <h3>C++ code &mdash; highlighted lines just ran</h3>
+      <pre class="code" id="code"></pre>
+    </div>
+    <div class="panel">
+      <h3>Operation log</h3>
+      <ol class="log" id="log"><li class="empty">no operations yet</li></ol>
+    </div>
+  </div>
+
+  <p class="hint">Green slots hold live elements. Dashed grey values were dequeued: the array still holds them, but they sit outside [front, rear] and will be overwritten.
+    The modulo in <code>(i + 1) % N</code> is what turns the last index N&minus;1 back into 0.</p>
+</div>
+
+<script>
+/* ================= CODE LISTING ================= */
+// Each entry is one line; the id is used to highlight it after an operation.
+var CODE = [
+  ['',        '<span class="c">// front = 0, rear = -1, count = 0 initially</span>'],
+  ['e0',      '<span class="k">void</span> enqueue(<span class="k">int</span> x) {'],
+  ['e-chk',   '    <span class="k">if</span> (count == N) {'],
+  ['e-ovf',   '        cout &lt;&lt; <span class="c">"Overflow"</span>; <span class="k">return</span>;'],
+  ['',        '    }'],
+  ['e-rear',  '    rear = (rear + 1) % N;'],
+  ['e-put',   '    arr[rear] = x;'],
+  ['e-cnt',   '    count++;'],
+  ['',        '}'],
+  ['d0',      '<span class="k">int</span> dequeue() {'],
+  ['d-chk',   '    <span class="k">if</span> (count == 0) {'],
+  ['d-unf',   '        cout &lt;&lt; <span class="c">"Underflow"</span>; <span class="k">return</span> -1;'],
+  ['',        '    }'],
+  ['d-get',   '    <span class="k">int</span> x = arr[front];'],
+  ['d-front', '    front = (front + 1) % N;'],
+  ['d-cnt',   '    count--;'],
+  ['d-ret',   '    <span class="k">return</span> x;'],
+  ['',        '}'],
+  ['p0',      '<span class="k">int</span> peek() { <span class="k">return</span> arr[front]; }']
+];
+var codeEl = document.getElementById('code');
+codeEl.innerHTML = CODE.map(function(l){
+  return '<span class="ln"' + (l[0] ? ' data-id="' + l[0] + '"' : '') + '>' + l[1] + '</span>';
+}).join('');
+
+function highlight(ids, errIds){
+  codeEl.querySelectorAll('.ln').forEach(function(el){
+    var id = el.getAttribute('data-id');
+    el.classList.toggle('hl', ids.indexOf(id) >= 0);
+    el.classList.toggle('hl-err', (errIds || []).indexOf(id) >= 0);
+  });
+}
+
+/* ================= QUEUE STATE ================= */
+var N, arr, front, rear, count;
+// Pointer angles are tracked cumulatively so the arrows always rotate
+// forward (clockwise), even when an index wraps from N-1 back to 0.
+var angFront = 0, angRear = 0;
+var flash = {in: -1, out: -1};
+var logItems = [];
+var demoTimer = null;
+
+function reset(){
+  stopDemo();
+  N = +document.getElementById('cap').value;
+  arr = new Array(N).fill(null);
+  front = 0; rear = -1; count = 0;
+  angFront = slotAngle(0);
+  angRear = slotAngle(-1);
+  flash = {in: -1, out: -1};
+  logItems = [];
+  highlight([]);
+  setVerdict('enqueue a few values, then dequeue some and keep enqueuing to watch <b>rear</b> wrap around');
+  buildRing();
+  render(false);
+  renderLog();
+}
+
+/* ================= OPERATIONS ================= */
+function enqueue(x){
+  flash = {in: -1, out: -1};
+  if (count === N){
+    highlight(['e0', 'e-chk'], ['e-ovf']);
+    setVerdict('<b>Overflow</b>: count == N (' + count + ' == ' + N + '), no free slot', true);
+    addLog('err', 'enqueue(' + x + ')', 'overflow');
+    render(true);
+    return false;
+  }
+  var old = rear;
+  rear = (rear + 1) % N;
+  arr[rear] = x;
+  count++;
+  flash.in = rear;
+  highlight(['e0', 'e-chk', 'e-rear', 'e-put', 'e-cnt']);
+  var wrapped = old === N - 1;
+  setVerdict('<code>rear = (' + old + ' + 1) % ' + N + ' = ' + rear + '</code> &rarr; <code>arr[' + rear + '] = ' + x + '</code>' +
+    (wrapped ? ' &nbsp;<b style="color:var(--rear)">wrapped around to 0!</b>' : ''));
+  addLog('enq', 'enqueue(' + x + ')', 'stored at index ' + rear + (wrapped ? ' (wrap)' : ''));
+  render(true);
+  return true;
+}
+
+function dequeue(){
+  flash = {in: -1, out: -1};
+  if (count === 0){
+    highlight(['d0', 'd-chk'], ['d-unf']);
+    setVerdict('<b>Underflow</b>: count == 0, nothing to remove', true);
+    addLog('err', 'dequeue()', 'underflow');
+    render(true);
+    return null;
+  }
+  var old = front;
+  var x = arr[front];
+  front = (front + 1) % N;
+  count--;
+  flash.out = old;
+  highlight(['d0', 'd-chk', 'd-get', 'd-front', 'd-cnt', 'd-ret']);
+  var wrapped = old === N - 1;
+  setVerdict('returned <code>arr[' + old + '] = ' + x + '</code>, then <code>front = (' + old + ' + 1) % ' + N + ' = ' + front + '</code>' +
+    (wrapped ? ' &nbsp;<b style="color:var(--front)">wrapped around to 0!</b>' : ''));
+  addLog('deq', 'dequeue()', 'returned ' + x);
+  render(true);
+  return x;
+}
+
+function peek(){
+  flash = {in: -1, out: -1};
+  if (count === 0){
+    highlight(['p0'], []);
+    setVerdict('queue is empty, nothing to peek at', true);
+    addLog('err', 'peek()', 'empty');
+  } else {
+    highlight(['p0']);
+    setVerdict('<code>peek() = arr[' + front + '] = ' + arr[front] + '</code> (queue unchanged)');
+    addLog('peek', 'peek()', arr[front]);
+  }
+  render(true);
+}
+
+/* ================= RING (SVG) ================= */
+var SVGNS = 'http://www.w3.org/2000/svg';
+var CX = 240, CY = 240, R_OUT = 150, R_IN = 96;
+var ringEls = {};
+
+function slotAngle(i){ return -90 + i * 360 / N; }   // index 0 at 12 o'clock, clockwise
+function rad(deg){ return deg * Math.PI / 180; }
+function pt(r, deg){ return [CX + r * Math.cos(rad(deg)), CY + r * Math.sin(rad(deg))]; }
+
+function el(tag, attrs, parent){
+  var e = document.createElementNS(SVGNS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// Annular sector between angles a0..a1 (degrees).
+function sectorPath(a0, a1){
+  var p1 = pt(R_OUT, a0), p2 = pt(R_OUT, a1), p3 = pt(R_IN, a1), p4 = pt(R_IN, a0);
+  var large = (a1 - a0) > 180 ? 1 : 0;
+  return 'M' + p1 + ' A' + R_OUT + ',' + R_OUT + ' 0 ' + large + ' 1 ' + p2 +
+         ' L' + p3 + ' A' + R_IN + ',' + R_IN + ' 0 ' + large + ' 0 ' + p4 + ' Z';
+}
+
+function buildRing(){
+  var svg = document.getElementById('ring');
+  svg.innerHTML = '';
+  var defs = el('defs', {}, svg);
+  [['ahF', 'var(--front)'], ['ahR', 'var(--rear)']].forEach(function(d){
+    var m = el('marker', {id: d[0], viewBox: '0 0 10 10', refX: '8', refY: '5', markerWidth: '7', markerHeight: '7', orient: 'auto-start-reverse'}, defs);
+    el('path', {d: 'M0,0 L10,5 L0,10 z', fill: d[1]}, m);
+  });
+
+  var step = 360 / N, gap = Math.min(2.2, step * 0.08);
+  ringEls.slots = []; ringEls.vals = [];
+  for (var i = 0; i < N; i++){
+    var a = slotAngle(i);
+    var s = el('path', {d: sectorPath(a - step / 2 + gap, a + step / 2 - gap), 'stroke-width': '1.5'}, svg);
+    s.style.transition = 'fill .25s, stroke .25s';
+    ringEls.slots.push(s);
+    var vp = pt((R_IN + R_OUT) / 2, a);
+    ringEls.vals.push(el('text', {x: vp[0], y: vp[1] + 6, 'text-anchor': 'middle', 'font-size': N > 9 ? '15' : '18', 'font-weight': '600'}, svg));
+    var ip = pt(R_OUT + 14, a);
+    var t = el('text', {x: ip[0], y: ip[1] + 4, 'text-anchor': 'middle', 'font-size': '11', fill: 'var(--faint)'}, svg);
+    t.textContent = i;
+  }
+
+  // Centre: count and status.
+  ringEls.cCount = el('text', {x: CX, y: CY + 2, 'text-anchor': 'middle', 'font-size': '26', 'font-weight': '600', fill: 'var(--ink)'}, svg);
+  ringEls.cStatus = el('text', {x: CX, y: CY + 24, 'text-anchor': 'middle', 'font-size': '12', fill: 'var(--faint)', 'letter-spacing': '.06em'}, svg);
+
+  // front pointer sits inside the ring, rear pointer outside it.
+  ringEls.fLine = el('line', {stroke: 'var(--front)', 'stroke-width': '3', 'marker-end': 'url(#ahF)'}, svg);
+  ringEls.fText = el('text', {'text-anchor': 'middle', 'font-size': '13', 'font-weight': '600', fill: 'var(--front-d)'}, svg);
+  ringEls.rLine = el('line', {stroke: 'var(--rear)', 'stroke-width': '3', 'marker-end': 'url(#ahR)'}, svg);
+  ringEls.rText = el('text', {'text-anchor': 'middle', 'font-size': '13', 'font-weight': '600', fill: 'var(--rear-d)'}, svg);
+  placePointers(angFront, angRear);
+}
+
+function placePointers(af, ar){
+  var a = pt(R_IN - 44, af), b = pt(R_IN - 6, af), t = pt(R_IN - 58, af);
+  setLine(ringEls.fLine, a, b);
+  ringEls.fText.setAttribute('x', t[0]); ringEls.fText.setAttribute('y', t[1] + 4);
+  ringEls.fText.textContent = 'front';
+  var c = pt(R_OUT + 72, ar), d = pt(R_OUT + 26, ar), u = pt(R_OUT + 84, ar);
+  setLine(ringEls.rLine, c, d);
+  ringEls.rText.setAttribute('x', u[0]); ringEls.rText.setAttribute('y', u[1] + 4);
+  ringEls.rText.textContent = 'rear';
+}
+function setLine(l, a, b){
+  l.setAttribute('x1', a[0]); l.setAttribute('y1', a[1]);
+  l.setAttribute('x2', b[0]); l.setAttribute('y2', b[1]);
+}
+
+// Moves a cumulative angle forward to the slot index `target`.
+function forwardTo(current, target){
+  var want = slotAngle(target);
+  var diff = ((want - current) % 360 + 360) % 360;
+  return current + diff;
+}
+
+var animId = null, animEnd = null;
+function animatePointers(toF, toR){
+  var fromF = angFront, fromR = angRear, t0 = null, dur = 380;
+  angFront = toF; angRear = toR;
+  if (animId) cancelAnimationFrame(animId);
+  // Fallback: guarantee the final position even if frames are throttled.
+  clearTimeout(animEnd);
+  animEnd = setTimeout(function(){ cancelAnimationFrame(animId); placePointers(toF, toR); }, dur + 60);
+  function frame(ts){
+    if (t0 === null) t0 = ts;
+    var p = Math.min(1, (ts - t0) / dur);
+    var e = 1 - Math.pow(1 - p, 3);
+    placePointers(fromF + (toF - fromF) * e, fromR + (toR - fromR) * e);
+    if (p < 1) animId = requestAnimationFrame(frame);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+/* ================= RENDER ================= */
+// A slot is live if it lies within count steps clockwise from front.
+function isLive(i){ return ((i - front + N) % N) < count; }
+
+function render(animate){
+  for (var i = 0; i < N; i++){
+    var live = isLive(i), slot = ringEls.slots[i], v = ringEls.vals[i];
+    var fill = live ? 'var(--fill-l)' : 'var(--bg)';
+    var stroke = live ? 'var(--fill)' : 'var(--line2)';
+    if (i === flash.in){ fill = 'var(--fill-m)'; }
+    if (i === flash.out){ fill = '#f6d3d2'; stroke = 'var(--cut)'; }
+    slot.setAttribute('fill', fill);
+    slot.setAttribute('stroke', stroke);
+    slot.setAttribute('stroke-dasharray', !live && arr[i] !== null && i !== flash.out ? '4 3' : '');
+    v.textContent = arr[i] === null ? '' : arr[i];
+    v.setAttribute('fill', live ? 'var(--ink)' : 'var(--line2)');
+    v.setAttribute('font-weight', live ? '600' : '400');
+  }
+  ringEls.cCount.textContent = count + ' / ' + N;
+  ringEls.cStatus.textContent = count === 0 ? 'EMPTY' : count === N ? 'FULL' : 'ELEMENTS';
+  ringEls.cStatus.setAttribute('fill', count === N ? 'var(--rear)' : 'var(--faint)');
+
+  var toF = forwardTo(angFront, front), toR = forwardTo(angRear, rear < 0 ? N - 1 : rear);
+  if (rear < 0) toR = slotAngle(-1);   // initial rear = -1 sits just before slot 0
+  if (animate) animatePointers(toF, toR);
+  else { angFront = toF; angRear = toR; placePointers(toF, toR); }
+
+  // Physical array
+  var cells = '', ptrs = '';
+  for (var j = 0; j < N; j++){
+    var cls = 'cell';
+    if (isLive(j)) cls += ' live'; else if (arr[j] !== null) cls += ' stale';
+    if (j === flash.in) cls += ' flash-in';
+    if (j === flash.out) cls += ' flash-out';
+    cells += '<div class="' + cls + '"><span class="idx">' + j + '</span>' + (arr[j] === null ? '' : arr[j]) + '</div>';
+    var p = '';
+    if (j === front) p += '<div class="f">&uarr; front</div>';
+    if (j === rear) p += '<div class="r">&uarr; rear</div>';
+    ptrs += '<div class="ptr">' + p + '</div>';
+  }
+  document.getElementById('cells').innerHTML = cells;
+  document.getElementById('ptrs').innerHTML = ptrs;
+
+  // Logical order front -> rear
+  var chips = [];
+  for (var k = 0; k < count; k++){
+    var idx = (front + k) % N;
+    var c = 'chip' + (k === 0 ? ' first' : '') + (k === count - 1 && count > 1 ? ' last' : '');
+    chips.push('<span class="' + c + '" title="index ' + idx + '">' + arr[idx] + '</span>');
+  }
+  document.getElementById('chips').innerHTML = chips.length ? chips.join('<span class="arrow">&rarr;</span>') : '<span class="none">empty</span>';
+
+  // Cards
+  document.getElementById('cfront').textContent = front;
+  document.getElementById('ffront').textContent = 'arr[front] = ' + (count ? arr[front] : '—');
+  document.getElementById('crear').textContent = rear;
+  document.getElementById('frear').textContent = 'arr[rear] = ' + (count ? arr[rear] : '—');
+  document.getElementById('ccount').textContent = count;
+  document.getElementById('fcount').textContent = 'of N = ' + N;
+  var st = document.getElementById('cstatus');
+  st.textContent = count === 0 ? 'empty' : count === N ? 'full' : 'partial';
+  st.style.color = count === N ? 'var(--rear)' : count === 0 ? 'var(--faint)' : 'var(--ink)';
+}
+
+function setVerdict(html, isErr){
+  var v = document.getElementById('verdict');
+  v.innerHTML = html;
+  v.classList.toggle('err', !!isErr);
+}
+
+function addLog(kind, op, result){
+  logItems.unshift({kind: kind, op: op, result: result});
+  if (logItems.length > 30) logItems.pop();
+  renderLog();
+}
+function renderLog(){
+  var ol = document.getElementById('log');
+  if (!logItems.length){ ol.innerHTML = '<li class="empty">no operations yet</li>'; return; }
+  ol.innerHTML = logItems.map(function(l){
+    return '<li><span class="op ' + l.kind + '">' + l.op + '</span><span>' + l.result + '</span></li>';
+  }).join('');
+}
+
+/* ================= INPUT HANDLING ================= */
+var xInput = document.getElementById('x');
+function nextValue(){ xInput.value = (+xInput.value || 0) + 10; }
+
+document.getElementById('enq').addEventListener('click', function(){
+  stopDemo();
+  var x = xInput.value === '' ? Math.floor(Math.random() * 90) + 10 : +xInput.value;
+  if (enqueue(x)) nextValue();
+});
+xInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') document.getElementById('enq').click();
+});
+document.getElementById('deq').addEventListener('click', function(){ stopDemo(); dequeue(); });
+document.getElementById('peek').addEventListener('click', function(){ stopDemo(); peek(); });
+document.getElementById('reset').addEventListener('click', reset);
+document.getElementById('fill').addEventListener('click', function(){
+  stopDemo();
+  while (count < N) enqueue(Math.floor(Math.random() * 90) + 10);
+  setVerdict('filled every free slot &mdash; the queue is <b>full</b> (count == N)');
+});
+document.getElementById('cap').addEventListener('input', function(){
+  document.getElementById('capout').textContent = this.value;
+  reset();
+});
+
+// Scripted demo: fill most of the queue, dequeue a few, then enqueue past the end.
+document.getElementById('demo').addEventListener('click', function(){
+  if (demoTimer){ stopDemo(); return; }
+  reset();
+  var steps = [], v = 10;
+  for (var i = 0; i < N - 1; i++) steps.push('e');
+  for (var j = 0; j < Math.ceil(N / 2); j++) steps.push('d');
+  for (var k = 0; k < Math.ceil(N / 2) + 1; k++) steps.push('e');
+  steps.push('e');   // ends with an overflow attempt
+  var btn = this;
+  btn.innerHTML = '&#10074;&#10074; stop demo';
+  demoTimer = setInterval(function(){
+    var s = steps.shift();
+    if (!s){ stopDemo(); return; }
+    if (s === 'e'){ enqueue(v); v += 10; xInput.value = v; }
+    else dequeue();
+  }, 900);
+});
+function stopDemo(){
+  if (demoTimer){ clearInterval(demoTimer); demoTimer = null; }
+  document.getElementById('demo').innerHTML = '&#9654; wrap-around demo';
+}
+
+reset();
+</script>
+</body>
+</html>
